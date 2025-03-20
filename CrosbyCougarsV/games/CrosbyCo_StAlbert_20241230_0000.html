@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html><head><style>
+
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1, h2 { text-align: center; }
+        .summary { margin-bottom: 20px; text-align: center; }
+        .team-names { font-size: 1.4em; margin-bottom: 10px; }
+        .score { font-size: 3em; font-weight: bold; margin: 15px 0; }
+        .game-info { font-size: 1.1em; color: #666; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .totals-row { background-color: #d3d3d3; color: black; font-weight: bold; }
+        .footnote { font-size: 0.9em; font-style: italic; color: #666; margin: 10px 0; }
+        .filter-container {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+        }
+        .filter-group {
+            display: inline-block;
+            margin-right: 20px;
+        }
+        .filter-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+        select {
+            padding: 5px;
+            width: 200px;
+            margin-right: 10px;
+        }
+        .shot-container {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+        .shot-chart {
+            flex: 1;
+            margin: 0 10px;
+        }
+        .stats-table {
+            width: 100%;
+            margin: 10px 0;
+            border-collapse: collapse;
+        }
+        .positive { color: #006400; }
+        .negative { color: #8B0000; }
+    
+</style>
+<script>
+
+        function filterShots() {
+            const selectedPeriod = document.getElementById('periodFilter').value;
+            const selectedPlayer = document.getElementById('playerFilter').value;
+            
+            // Filter MyTeam shots
+            document.querySelectorAll('#myTeamChart .shot-marker').forEach(shot => {
+                const period = shot.getAttribute('data-period');
+                const playerId = shot.getAttribute('data-player-id');
+                const periodMatch = selectedPeriod === 'all' || period === selectedPeriod;
+                const playerMatch = selectedPlayer === 'all' || playerId === selectedPlayer;
+                
+                shot.style.display = (periodMatch && playerMatch) ? '' : 'none';
+            });
+            
+            // Filter Opponent shots (period only)
+            document.querySelectorAll('#opponentChart .shot-marker').forEach(shot => {
+                const period = shot.getAttribute('data-period');
+                const periodMatch = selectedPeriod === 'all' || period === selectedPeriod;
+                
+                shot.style.display = periodMatch ? '' : 'none';
+            });
+            
+            updateShotStats();
+        }
+
+        function updateShotStats() {
+            const visibleMyTeamShots = Array.from(document.querySelectorAll('#myTeamChart .shot-marker'))
+                .filter(shot => shot.style.display !== 'none');
+            const visibleOppShots = Array.from(document.querySelectorAll('#opponentChart .shot-marker'))
+                .filter(shot => shot.style.display !== 'none');
+            
+            // Update MyTeam stats
+            const myTeamMakes = visibleMyTeamShots.filter(shot => shot.getAttribute('data-made') === 'true').length;
+            const myTeamAttempts = visibleMyTeamShots.length;
+            const myTeamPct = myTeamAttempts > 0 ? (myTeamMakes / myTeamAttempts * 100).toFixed(1) : '0.0';
+            
+            document.getElementById('myTeamStats').innerHTML = 
+                `${myTeamMakes}-${myTeamAttempts} (${myTeamPct}%)`;
+            
+            // Update Opponent stats
+            const oppMakes = visibleOppShots.filter(shot => shot.getAttribute('data-made') === 'true').length;
+            const oppAttempts = visibleOppShots.length;
+            const oppPct = oppAttempts > 0 ? (oppMakes / oppAttempts * 100).toFixed(1) : '0.0';
+            
+            document.getElementById('opponentStats').innerHTML = 
+                `${oppMakes}-${oppAttempts} (${oppPct}%)`;
+        }
+    
+</script>
+</head><body>
+<h1>Game Summary</h1>
+<div class='summary'>
+<p class='team-names'><strong>Crosby Cougars Varsity</strong> vs <strong>St. Albert A</strong></p>
+<p class='score'>41 - 33</p>
+<p class='game-info'>December 30, 2024 - 7:30 PM | Crosby MS - Home - Other - Game Duration: 06:11 | Status: Final</p>
+</div>
+<h2>Box Score</h2>
+<table>
+<tr><th>Player</th><th>Minutes</th><th>FG</th><th>3P</th><th>FT</th><th>OREB</th><th>DREB</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th>Fouls</th><th>+/-</th><th>Points</th></tr>
+<tr><td>#0 Garvin</td><td>00:00</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td>#3 Brown</td><td>21:49</td><td>4/11 (36.4%)</td><td>0/1 (0.0%)</td><td>1/2 (50.0%)</td><td>2</td><td>2</td><td>4</td><td>3</td><td>2</td><td>0</td><td>3</td><td>3</td><td>9</td><td>9</td></tr>
+<tr><td>#5 Gwaltney</td><td>20:31</td><td>1/4 (25.0%)</td><td>0/1 (0.0%)</td><td>0/0 (0.0%)</td><td>0</td><td>3</td><td>3</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td><td>2</td><td>2</td></tr>
+<tr><td>#10 Britton</td><td>05:38</td><td>1/1 (100.0%)</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>1</td><td>1</td><td>5</td><td>2</td></tr>
+<tr><td>#11 Wolf</td><td>24:00</td><td>7/14 (50.0%)</td><td>5/11 (45.5%)</td><td>0/0 (0.0%)</td><td>0</td><td>2</td><td>2</td><td>2</td><td>1</td><td>0</td><td>1</td><td>1</td><td>8</td><td>19</td></tr>
+<tr><td>#12 Walker</td><td>24:00</td><td>3/4 (75.0%)</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>1</td><td>5</td><td>6</td><td>6</td><td>2</td><td>1</td><td>1</td><td>2</td><td>8</td><td>6</td></tr>
+<tr><td>#14 Wright</td><td>10:56</td><td>1/3 (33.3%)</td><td>0/0 (0.0%)</td><td>1/2 (50.0%)</td><td>2</td><td>1</td><td>3</td><td>0</td><td>0</td><td>0</td><td>3</td><td>1</td><td>6</td><td>3</td></tr>
+<tr><td>#15 Sanders</td><td>00:00</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td>#21 Simms</td><td>00:00</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td>#23 Mortenson</td><td>02:33</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+<tr><td>#25 TBD</td><td>00:00</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td>#32 Thompson</td><td>00:00</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td>#33 Sanders</td><td>00:00</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td>#34 Hall</td><td>10:30</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>1</td><td>1</td><td>2</td><td>0</td><td>0</td><td>1</td><td>1</td><td>2</td><td>2</td><td>0</td></tr>
+<tr class='totals-row'><td>TEAM TOTALS</td><td>24:00</td><td>17/37 (45.9%)</td><td>5/13 (38.5%)</td><td>2/4 (50.0%)</td><td>6</td><td>14</td><td>20</td><td>13</td><td>5</td><td>2</td><td>11</td><td>11</td><td>8</td><td>41</td></tr>
+<tr class='totals-row'><td>OPPONENT TOTALS</td><td>24:00</td><td>14/45 (31.1%)</td><td>4/16 (25.0%)</td><td>1/2 (50.0%)</td><td>12</td><td>14</td><td>26</td><td>8</td><td>1</td><td>1</td><td>16</td><td>5</td><td>-8</td><td>33</td></tr>
+</table>
+<h2>Advanced Statistics</h2>
+<table>
+<tr><th>Player</th><th>AST/TO</th><th>AST%</th><th>REB%</th><th>TOV%</th><th>PIE</th><th>eFG%</th><th>TS%</th><th>OFFRTG</th><th>DEFRTG</th><th>NETRTG</th></tr>
+<tr><td>#0 Garvin</td><td>0.0</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0</td><td>0.0%</td><td>0.0%</td><td>0.0</td><td>0.0</td><td class='positive'>0.0</td></tr>
+<tr><td>#3 Brown</td><td>1.0</td><td>21.4%</td><td>12.9%</td><td>20.2%</td><td>6.1</td><td>36.4%</td><td>37.9%</td><td>48.0</td><td>36.5</td><td class='positive'>11.5</td></tr>
+<tr><td>#5 Gwaltney</td><td>1.0</td><td>6.7%</td><td>9.4%</td><td>20.0%</td><td>3.0</td><td>25.0%</td><td>25.0%</td><td>49.3</td><td>46.3</td><td class='positive'>3.0</td></tr>
+<tr><td>#10 Britton</td><td>1.0</td><td>20.0%</td><td>0.0%</td><td>50.0%</td><td>5.0</td><td>100.0%</td><td>100.0%</td><td>65.0</td><td>38.1</td><td class='positive'>26.9</td></tr>
+<tr><td>#11 Wolf</td><td>2.0</td><td>15.4%</td><td>5.4%</td><td>6.7%</td><td>19.5</td><td>67.9%</td><td>67.9%</td><td>50.6</td><td>40.7</td><td class='positive'>9.9</td></tr>
+<tr><td>#12 Walker</td><td>6.0</td><td>35.3%</td><td>16.2%</td><td>20.0%</td><td>19.8</td><td>75.0%</td><td>75.0%</td><td>50.6</td><td>40.7</td><td class='positive'>9.9</td></tr>
+<tr><td>#14 Wright</td><td>0.0</td><td>0.0%</td><td>15.8%</td><td>43.6%</td><td>-2.7</td><td>33.3%</td><td>38.7%</td><td>59.5</td><td>42.1</td><td class='positive'>17.4</td></tr>
+<tr><td>#15 Sanders</td><td>0.0</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0</td><td>0.0%</td><td>0.0%</td><td>0.0</td><td>0.0</td><td class='positive'>0.0</td></tr>
+<tr><td>#21 Simms</td><td>0.0</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0</td><td>0.0%</td><td>0.0%</td><td>0.0</td><td>0.0</td><td class='positive'>0.0</td></tr>
+<tr><td>#23 Mortenson</td><td>0.0</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>100.0</td><td>0.0%</td><td>0.0%</td><td>0.0</td><td>0.0</td><td class='positive'>0.0</td></tr>
+<tr><td>#25 TBD</td><td>0.0</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0</td><td>0.0%</td><td>0.0%</td><td>0.0</td><td>0.0</td><td class='positive'>0.0</td></tr>
+<tr><td>#32 Thompson</td><td>0.0</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0</td><td>0.0%</td><td>0.0%</td><td>0.0</td><td>0.0</td><td class='positive'>0.0</td></tr>
+<tr><td>#33 Sanders</td><td>0.0</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0</td><td>0.0%</td><td>0.0%</td><td>0.0</td><td>0.0</td><td class='positive'>0.0</td></tr>
+<tr><td>#34 Hall</td><td>0.0</td><td>0.0%</td><td>11.1%</td><td>100.0%</td><td>0.0</td><td>0.0%</td><td>0.0%</td><td>52.8</td><td>47.2</td><td class='positive'>5.6</td></tr>
+<tr class='totals-row'><td>TEAM TOTALS</td><td>1.2</td><td>433.3%</td><td>54.1%</td><td>22.1%</td><td>40.2</td><td>52.7%</td><td>52.9%</td><td>50.6</td><td>40.7</td><td>9.9</td></tr>
+<tr class='totals-row'><td>OPPONENT TOTALS</td><td>0.5</td><td>400.0%</td><td>70.3%</td><td>25.9%</td><td>18.0</td><td>35.6%</td><td>36.0%</td><td>40.7</td><td>50.6</td><td class='negative'>-9.9</td></tr>
+</table>
+<div class='filter-container'>
+<div class='filter-group'>
+<label class='filter-label'>Period</label>
+<select id='periodFilter' onchange='filterShots()'>
+<option value='all'>All Periods</option>
+<option value='1'>Period 1</option>
+<option value='2'>Period 2</option>
+<option value='3'>Period 3</option>
+<option value='4'>Period 4</option>
+</select>
+</div>
+<div class='filter-group'>
+<label class='filter-label'>Player</label>
+<select id='playerFilter' onchange='filterShots()'>
+<option value='all'>All Players</option>
+<option value='38bfceb3-7bc8-46d4-b071-826a3eeeee2f'>#0 Garvin</option>
+<option value='353c87c5-6583-4ae0-a65d-3ff74da62f0f'>#3 Brown</option>
+<option value='38c6487c-8c48-46c0-b5e2-fa3afc66b571'>#5 Gwaltney</option>
+<option value='fba811cd-497f-413e-8816-b3c5aab6a937'>#10 Britton</option>
+<option value='ae4844e3-cd0a-41ca-8a78-addcaade61ad'>#11 Wolf</option>
+<option value='146cf03c-044e-4928-ad29-77bef4800442'>#12 Walker</option>
+<option value='e21e9292-da2d-4151-b79e-8ecf1c04a094'>#14 Wright</option>
+<option value='a00ef6bf-518f-4238-9e48-5e931c195b88'>#15 Sanders</option>
+<option value='68cfe4f7-e4ce-4639-b776-4c061a5c5647'>#21 Simms</option>
+<option value='153a463c-ae5c-445c-885b-8ae79dd693e8'>#23 Mortenson</option>
+<option value='eb1be9a7-b48a-4474-9f6d-481062997b0a'>#25 TBD</option>
+<option value='85f533d3-7826-463b-b1fc-4dccf66fa536'>#32 Thompson</option>
+<option value='ee3db741-87f0-4c92-ba93-456c9dbbfb24'>#33 Sanders</option>
+<option value='060c64c2-c5ea-4ad7-837f-f608f8618226'>#34 Hall</option>
+</select>
+</div>
+<table class='stats-table'>
+<tr>
+<th>Crosby Cougars Varsity</th>
+<th>St. Albert A</th>
+</tr>
+<tr>
+<td id='myTeamStats'></td>
+<td id='opponentStats'></td>
+</tr>
+</table>
+</div>
+<div class='shot-container'>
+<div class='shot-chart'>
+<div id='myTeamChart'>
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 520' width='100%' height='400px'>
+<rect width='500' height='50' fill='#FF4500'/>
+<text x='250' y='25' 
+                fill='white' 
+                font-size='20' 
+                text-anchor='middle' 
+                dominant-baseline='middle' 
+                font-weight='bold'>Crosby Cougars Varsity</text>
+<rect y='50' 
+                width='500' 
+                height='470' 
+                fill='#C19A6B'/>
+<rect y='50' 
+                width='500' 
+                height='470' 
+                stroke='black' 
+                fill='none' 
+                stroke-width='2'/>
+<path d='M 52 102.5 
+                A 198 198 0 0 0 
+                448 102.5' 
+                stroke='black' 
+                fill='none' 
+                stroke-width='2'/>
+<line x1='52' y1='102.5' 
+                x2='52' y2='50' 
+                stroke='black' 
+                stroke-width='2'/>
+<line x1='448' y1='102.5' 
+                x2='448' y2='50' 
+                stroke='black' 
+                stroke-width='2'/>
+<rect x='190' 
+                y='50' 
+                width='120' 
+                height='190' 
+                fill='#00008B'/>
+<rect x='190' 
+                y='50' 
+                width='120' 
+                height='190' 
+                stroke='black' 
+                fill='none' 
+                stroke-width='2'/>
+<line x1='190' 
+                y1='240' 
+                x2='310' 
+                y2='240' 
+                stroke='black' 
+                stroke-width='2'/>
+<path d='M 190 240 
+                A 60 60 0 1 1 
+                310 240' 
+                stroke='black' 
+                fill='none' 
+                stroke-width='2'/>
+<line x1='220' 
+                y1='90' 
+                x2='280' 
+                y2='90' 
+                stroke='white' 
+                stroke-width='2'/>
+<circle cx='250' 
+                cy='100' 
+                r='7' 
+                stroke='red' 
+                fill='none' 
+                stroke-width='2'/>
+<circle cx='223.63385' 
+                            cy='122.529495' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<circle cx='279.4028' 
+                            cy='116.98474' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<g>
+<line x1='227.5843' 
+                            y1='145.8909' 
+                            x2='235.91765' 
+                            y2='154.22424' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='227.5843' 
+                            y1='154.22424' 
+                            x2='235.91765' 
+                            y2='145.8909' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<circle cx='208.76215' 
+                            cy='131.40111' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<g>
+<line x1='168.65547' 
+                            y1='102.83752' 
+                            x2='176.98882' 
+                            y2='111.170845' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='168.65547' 
+                            y1='111.170845' 
+                            x2='176.98882' 
+                            y2='102.83752' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<circle cx='245.94144' 
+                            cy='119.20264' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<g>
+<line x1='63.314137' 
+                            y1='203.75215' 
+                            x2='71.64747' 
+                            y2='212.0855' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='63.314137' 
+                            y1='212.0855' 
+                            x2='71.64747' 
+                            y2='203.75215' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='55.320217' 
+                            y1='198.01167' 
+                            x2='63.653553' 
+                            y2='206.34502' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='55.320217' 
+                            y1='206.34502' 
+                            x2='63.653553' 
+                            y2='198.01167' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='257.32776' 
+                            y1='123.71189' 
+                            x2='265.66107' 
+                            y2='132.04523' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='257.32776' 
+                            y1='132.04523' 
+                            x2='265.66107' 
+                            y2='123.71189' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='218.22789' 
+                            y1='109.49122' 
+                            x2='226.56123' 
+                            y2='117.82455' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='218.22789' 
+                            y1='117.82455' 
+                            x2='226.56123' 
+                            y2='109.49122' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='278.9541' 
+                            y1='102.83752' 
+                            x2='287.2874' 
+                            y2='111.170845' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='278.9541' 
+                            y1='111.170845' 
+                            x2='287.2874' 
+                            y2='102.83752' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<circle cx='283.12076' 
+                            cy='110.331024' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<g>
+<line x1='384.29544' 
+                            y1='263.63556' 
+                            x2='392.62875' 
+                            y2='271.96887' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='384.29544' 
+                            y1='271.96887' 
+                            x2='392.62875' 
+                            y2='263.63556' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<circle cx='286.83865' 
+                            cy='132.51007' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<g>
+<line x1='189.72375' 
+                            y1='195.98949' 
+                            x2='198.0571' 
+                            y2='204.32283' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='189.72375' 
+                            y1='204.32283' 
+                            x2='198.0571' 
+                            y2='195.98949' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<circle cx='48.89113' 
+                            cy='151.36226' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<g>
+<line x1='199.08017' 
+                            y1='196.90273' 
+                            x2='207.41351' 
+                            y2='205.23607' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='199.08017' 
+                            y1='205.23607' 
+                            x2='207.41351' 
+                            y2='196.90273' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<circle cx='267.69098' 
+                            cy='100.15474' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<g>
+<line x1='249.21065' 
+                            y1='144.97768' 
+                            x2='257.54398' 
+                            y2='153.31102' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='249.21065' 
+                            y1='153.31102' 
+                            x2='257.54398' 
+                            y2='144.97768' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='145.78986' 
+                            y1='156.98044' 
+                            x2='154.1232' 
+                            y2='165.31378' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='145.78986' 
+                            y1='165.31378' 
+                            x2='154.1232' 
+                            y2='156.98044' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='428.35254' 
+                            y1='198.01167' 
+                            x2='436.68585' 
+                            y2='206.34502' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='428.35254' 
+                            y1='206.34502' 
+                            x2='436.68585' 
+                            y2='198.01167' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<circle cx='278.8448' 
+                            cy='112.35321' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<g>
+<line x1='167.41618' 
+                            y1='125.01655' 
+                            x2='175.74953' 
+                            y2='133.34988' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='167.41618' 
+                            y1='133.34988' 
+                            x2='175.74953' 
+                            y2='125.01655' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<circle cx='290.5566' 
+                            cy='114.766846' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<g>
+<line x1='73.2286' 
+                            y1='219.27748' 
+                            x2='81.56193' 
+                            y2='227.61082' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='73.2286' 
+                            y1='227.61082' 
+                            x2='81.56193' 
+                            y2='219.27748' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='26.816086' 
+                            y1='139.2372' 
+                            x2='35.149418' 
+                            y2='147.57054' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='26.816086' 
+                            y1='147.57054' 
+                            x2='35.149418' 
+                            y2='139.2372' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='20.619534' 
+                            y1='110.40444' 
+                            x2='28.952866' 
+                            y2='118.73777' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='20.619534' 
+                            y1='118.73777' 
+                            x2='28.952866' 
+                            y2='110.40444' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='94.978134' 
+                            y1='232.38918' 
+                            x2='103.31146' 
+                            y2='240.72252' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='94.978134' 
+                            y1='240.72252' 
+                            x2='103.31146' 
+                            y2='232.38918' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<circle cx='432.5192' 
+                            cy='100.15474' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<g>
+<line x1='268.48157' 
+                            y1='119.27607' 
+                            x2='276.81488' 
+                            y2='127.6094' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='268.48157' 
+                            y1='127.6094' 
+                            x2='276.81488' 
+                            y2='119.27607' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<circle cx='285.59937' 
+                            cy='111.43997' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<circle cx='452.90622' 
+                            cy='216.79044' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<circle cx='60.726192' 
+                            cy='242.10062' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<circle cx='192.6511' 
+                            cy='133.61902' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<g>
+<line x1='195.92027' 
+                            y1='109.49122' 
+                            x2='204.25362' 
+                            y2='117.82455' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='195.92027' 
+                            y1='117.82455' 
+                            x2='204.25362' 
+                            y2='109.49122' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<circle cx='28.504131' 
+                            cy='109.02635' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<circle cx='464.06' 
+                            cy='164.66968' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+</svg>
+
+</div>
+</div>
+<div class='shot-chart'>
+<div id='opponentChart'>
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 520' width='100%' height='400px'>
+<rect width='500' height='50' fill='#FF4500'/>
+<text x='250' y='25' 
+                fill='white' 
+                font-size='20' 
+                text-anchor='middle' 
+                dominant-baseline='middle' 
+                font-weight='bold'>St. Albert A</text>
+<rect y='50' 
+                width='500' 
+                height='470' 
+                fill='#C19A6B'/>
+<rect y='50' 
+                width='500' 
+                height='470' 
+                stroke='black' 
+                fill='none' 
+                stroke-width='2'/>
+<path d='M 52 102.5 
+                A 198 198 0 0 0 
+                448 102.5' 
+                stroke='black' 
+                fill='none' 
+                stroke-width='2'/>
+<line x1='52' y1='102.5' 
+                x2='52' y2='50' 
+                stroke='black' 
+                stroke-width='2'/>
+<line x1='448' y1='102.5' 
+                x2='448' y2='50' 
+                stroke='black' 
+                stroke-width='2'/>
+<rect x='190' 
+                y='50' 
+                width='120' 
+                height='190' 
+                fill='#00008B'/>
+<rect x='190' 
+                y='50' 
+                width='120' 
+                height='190' 
+                stroke='black' 
+                fill='none' 
+                stroke-width='2'/>
+<line x1='190' 
+                y1='240' 
+                x2='310' 
+                y2='240' 
+                stroke='black' 
+                stroke-width='2'/>
+<path d='M 190 240 
+                A 60 60 0 1 1 
+                310 240' 
+                stroke='black' 
+                fill='none' 
+                stroke-width='2'/>
+<line x1='220' 
+                y1='90' 
+                x2='280' 
+                y2='90' 
+                stroke='white' 
+                stroke-width='2'/>
+<circle cx='250' 
+                cy='100' 
+                r='7' 
+                stroke='red' 
+                fill='none' 
+                stroke-width='2'/>
+<circle cx='283.802' 
+                            cy='110.135315' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<g>
+<line x1='221.94582' 
+                            y1='118.36283' 
+                            x2='230.27916' 
+                            y2='126.69616' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='221.94582' 
+                            y1='126.69616' 
+                            x2='230.27916' 
+                            y2='118.36283' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='277.1567' 
+                            y1='103.750755' 
+                            x2='285.49002' 
+                            y2='112.08408' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='277.1567' 
+                            y1='112.08408' 
+                            x2='285.49002' 
+                            y2='103.750755' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='224.42441' 
+                            y1='213.73271' 
+                            x2='232.75775' 
+                            y2='222.06606' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='224.42441' 
+                            y1='222.06606' 
+                            x2='232.75775' 
+                            y2='213.73271' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='24.895515' 
+                            y1='139.4329' 
+                            x2='33.228848' 
+                            y2='147.76625' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='24.895515' 
+                            y1='147.76625' 
+                            x2='33.228848' 
+                            y2='139.4329' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='243.69534' 
+                            y1='148.10881' 
+                            x2='252.02869' 
+                            y2='156.44215' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='243.69534' 
+                            y1='156.44215' 
+                            x2='252.02869' 
+                            y2='148.10881' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='107.92929' 
+                            y1='244.7834' 
+                            x2='116.26262' 
+                            y2='253.11674' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='107.92929' 
+                            y1='253.11674' 
+                            x2='116.26262' 
+                            y2='244.7834' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='417.19876' 
+                            y1='203.55641' 
+                            x2='425.53207' 
+                            y2='211.88976' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='417.19876' 
+                            y1='211.88976' 
+                            x2='425.53207' 
+                            y2='203.55641' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='460.57462' 
+                            y1='113.731316' 
+                            x2='468.90793' 
+                            y2='122.064644' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='460.57462' 
+                            y1='122.064644' 
+                            x2='468.90793' 
+                            y2='113.731316' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='207.0741' 
+                            y1='116.14492' 
+                            x2='215.40744' 
+                            y2='124.47825' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='207.0741' 
+                            y1='124.47825' 
+                            x2='215.40744' 
+                            y2='116.14492' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='206.51604' 
+                            y1='114.84026' 
+                            x2='214.84938' 
+                            y2='123.17359' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='206.51604' 
+                            y1='123.17359' 
+                            x2='214.84938' 
+                            y2='114.84026' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='271.51825' 
+                            y1='123.9076' 
+                            x2='279.85156' 
+                            y2='132.24094' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='271.51825' 
+                            y1='132.24094' 
+                            x2='279.85156' 
+                            y2='123.9076' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='57.798836' 
+                            y1='194.6848' 
+                            x2='66.13217' 
+                            y2='203.01814' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='57.798836' 
+                            y1='203.01814' 
+                            x2='66.13217' 
+                            y2='194.6848' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='343.39822' 
+                            y1='162.72092' 
+                            x2='351.73154' 
+                            y2='171.05426' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='343.39822' 
+                            y1='171.05426' 
+                            x2='351.73154' 
+                            y2='162.72092' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='218.22789' 
+                            y1='109.49122' 
+                            x2='226.56123' 
+                            y2='117.82455' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='218.22789' 
+                            y1='117.82455' 
+                            x2='226.56123' 
+                            y2='109.49122' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='409.7629' 
+                            y1='229.06233' 
+                            x2='418.09622' 
+                            y2='237.39568' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='409.7629' 
+                            y1='237.39568' 
+                            x2='418.09622' 
+                            y2='229.06233' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<circle cx='407.73303' 
+                            cy='226.57529' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<g>
+<line x1='199.63821' 
+                            y1='115.03597' 
+                            x2='207.97156' 
+                            y2='123.3693' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='199.63821' 
+                            y1='123.3693' 
+                            x2='207.97156' 
+                            y2='115.03597' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='403.56638' 
+                            y1='217.9728' 
+                            x2='411.8997' 
+                            y2='226.30614' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='403.56638' 
+                            y1='226.30614' 
+                            x2='411.8997' 
+                            y2='217.9728' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<circle cx='281.32336' 
+                            cy='107.91742' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<g>
+<line x1='460.57462' 
+                            y1='123.71189' 
+                            x2='468.90793' 
+                            y2='132.04523' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='460.57462' 
+                            y1='132.04523' 
+                            x2='468.90793' 
+                            y2='123.71189' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<circle cx='234.78764' 
+                            cy='114.766846' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<circle cx='37.179302' 
+                            cy='162.25607' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<circle cx='211.92201' 
+                            cy='107.91742' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<g>
+<line x1='469.80783' 
+                            y1='97.29275' 
+                            x2='478.14114' 
+                            y2='105.626076' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='469.80783' 
+                            y1='105.626076' 
+                            x2='478.14114' 
+                            y2='97.29275' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='279.63535' 
+                            y1='105.96865' 
+                            x2='287.96866' 
+                            y2='114.30198' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='279.63535' 
+                            y1='114.30198' 
+                            x2='287.96866' 
+                            y2='105.96865' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<circle cx='281.8814' 
+                            cy='113.65788' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<g>
+<line x1='389.25266' 
+                            y1='259.19977' 
+                            x2='397.58597' 
+                            y2='267.53308' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='389.25266' 
+                            y1='267.53308' 
+                            x2='397.58597' 
+                            y2='259.19977' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='202.79811' 
+                            y1='114.84026' 
+                            x2='211.13145' 
+                            y2='123.17359' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='202.79811' 
+                            y1='123.17359' 
+                            x2='211.13145' 
+                            y2='114.84026' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='285.15067' 
+                            y1='122.79864' 
+                            x2='293.48398' 
+                            y2='131.13197' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='285.15067' 
+                            y1='131.13197' 
+                            x2='293.48398' 
+                            y2='122.79864' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='273.99683' 
+                            y1='115.03597' 
+                            x2='282.33014' 
+                            y2='123.3693' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='273.99683' 
+                            y1='123.3693' 
+                            x2='282.33014' 
+                            y2='115.03597' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<circle cx='110.85665' 
+                            cy='145.81749' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<g>
+<line x1='440.74567' 
+                            y1='190.24901' 
+                            x2='449.07898' 
+                            y2='198.58235' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='440.74567' 
+                            y1='198.58235' 
+                            x2='449.07898' 
+                            y2='190.24901' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='230.62097' 
+                            y1='110.60018' 
+                            x2='238.95432' 
+                            y2='118.93351' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='230.62097' 
+                            y1='118.93351' 
+                            x2='238.95432' 
+                            y2='110.60018' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<circle cx='216.87926' 
+                            cy='105.69949' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<g>
+<line x1='308.13947' 
+                            y1='133.69244' 
+                            x2='316.47278' 
+                            y2='142.02579' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='308.13947' 
+                            y1='142.02579' 
+                            x2='316.47278' 
+                            y2='133.69244' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='224.42441' 
+                            y1='107.27331' 
+                            x2='232.75775' 
+                            y2='115.606636' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='224.42441' 
+                            y1='115.606636' 
+                            x2='232.75775' 
+                            y2='107.27331' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<circle cx='223.63385' 
+                            cy='112.54892' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<circle cx='270.72763' 
+                            cy='118.09369' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<circle cx='228.59108' 
+                            cy='217.89938' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<g>
+<line x1='342.1589' 
+                            y1='113.927025' 
+                            x2='350.49222' 
+                            y2='122.26035' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='342.1589' 
+                            y1='122.26035' 
+                            x2='350.49222' 
+                            y2='113.927025' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<circle cx='29.743443' 
+                            cy='103.4816' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+<g>
+<line x1='277.71475' 
+                            y1='109.49122' 
+                            x2='286.04807' 
+                            y2='117.82455' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='277.71475' 
+                            y1='117.82455' 
+                            x2='286.04807' 
+                            y2='109.49122' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<g>
+<line x1='86.861015' 
+                            y1='223.71327' 
+                            x2='95.19434' 
+                            y2='232.04662' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+<line x1='86.861015' 
+                            y1='232.04662' 
+                            x2='95.19434' 
+                            y2='223.71327' 
+                            stroke='#FF0000' 
+                            stroke-width='3' 
+                            opacity='0.8'/>
+</g>
+<circle cx='415.16888' 
+                            cy='208.83206' 
+                            r='5' 
+                            fill='#00FF00' 
+                            opacity='0.7'/>
+</svg>
+
+</div>
+</div>
+</div>
+<h2>Lineup Analysis</h2>
+<table>
+<tr><th>Lineup</th><th>MIN</th><th>OFF POSS</th><th>DEF POSS</th><th>OFF RTG</th><th>DEF RTG</th><th>NET RTG</th><th>+/-</th><th>eFG%</th></tr>
+<tr><td colspan='9' style='text-align: center; padding: 20px;'>No lineup data available</td></tr>
+</table>
+<script>updateShotStats();</script>
+<div style='margin-top: 20px; font-size: 0.9em;'>
+<h3>Advanced Statistics Glossary</h3>
+<ul>
+<li><strong>AST/TO</strong> - Assist to Turnover Ratio</li>
+<li><strong>AST%</strong> - Percentage of teammate field goals the player assisted while on court</li>
+<li><strong>REB%</strong> - Percentage of available rebounds the player grabbed while on court</li>
+<li><strong>TOV%</strong> - Percentage of Turnovers by a player against all player actions</li>
+<li><strong>PIE</strong> - Player Impact Estimate: A measure of a player's overall statistical contribution</li>
+<li><strong>eFG%</strong> - Effective Field Goal Percentage: Adjusts for 3-pointers being worth more</li>
+<li><strong>TS%</strong> - True Shooting Percentage: Accounts for 2-pointers, 3-pointers, and free throws</li>
+<li><strong>OFFRTG</strong> - Points scored per 100 possessions while player was on court</li>
+<li><strong>DEFRTG</strong> - Points allowed per 100 possessions while player was on court</li>
+<li><strong>NETRTG</strong> - Difference between offensive and defensive rating</li>
+</ul>
+</div>
+<p class='footnote'>*All possession-based statistics are estimates based on recorded statistical events</p>
+<p class='footnote'>*All player minutes are estimates based on real time entries of tip off, period start/end, and substitution entries</p>
+</body></html>
