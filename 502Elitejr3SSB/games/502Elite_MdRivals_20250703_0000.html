@@ -1,0 +1,2860 @@
+<!DOCTYPE html>
+<html><head><style>
+
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1, h2 { text-align: center; }
+        .summary { margin-bottom: 20px; text-align: center; }
+        .team-names { font-size: 1.4em; margin-bottom: 10px; }
+        .score { font-size: 3em; font-weight: bold; margin: 15px 0; }
+        .game-info { font-size: 1.1em; color: #666; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .totals-row { background-color: #d3d3d3; color: black; font-weight: bold; }
+        .footnote { font-size: 0.9em; font-style: italic; color: #666; margin: 10px 0; }
+        .filter-container {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+        }
+        .filter-group {
+            display: inline-block;
+            margin-right: 20px;
+        }
+        .filter-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+        select {
+            padding: 5px;
+            width: 200px;
+            margin-right: 10px;
+        }
+        .shot-container {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+        .shot-chart {
+            flex: 1;
+            margin: 0 10px;
+        }
+        .stats-table {
+            width: 100%;
+            margin: 10px 0;
+            border-collapse: collapse;
+        }
+        .positive { color: #006400; }
+        .negative { color: #8B0000; }
+
+        /* Game Flow Chart Styles */
+        .game-flow-container {
+            margin: 20px 0;
+            background-color: #2d2d2d;
+            border-radius: 10px;
+            padding: 15px;
+            color: white;
+        }
+        .game-flow-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: white;
+            text-align: center;
+        }
+        .game-flow-chart {
+            position: relative;
+            width: 100%;
+            height: 250px;
+            background-color: #1a1a1a;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .team-line {
+            stroke: #FF4500;
+            stroke-width: 2;
+            fill: none;
+        }
+        .opponent-line {
+            stroke: #999;
+            stroke-width: 2;
+            fill: none;
+        }
+        .period-line {
+            stroke: #666;
+            stroke-width: 1;
+            stroke-dasharray: 4,4;
+        }
+        .team-point {
+            fill: #FF4500;
+            r: 3;
+        }
+        .opponent-point {
+            fill: #999;
+            r: 3;
+        }
+        .period-label {
+            fill: #999;
+            font-size: 10px;
+            text-anchor: middle;
+        }
+        .game-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .game-stat-box {
+            background-color: #333;
+            border-radius: 4px;
+            padding: 8px;
+            text-align: center;
+        }
+        .game-stat-label {
+            color: #999;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        .game-stat-value {
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+        }
+    
+</style>
+<script>
+const gameFlowData = {"plays":[{"timestamp":"2025-07-03T14:57:39.0362690","timeDisplay":"8:00","period":1,"actionType":"GameStart","isOppAction":false,"myTeamScore":0,"oppScore":0,"gameTimeSeconds":480},{"timestamp":"2025-07-03T14:57:39.0362690","timeDisplay":"7:40","period":1,"actionType":"FreeThrowMade","isOppAction":false,"myTeamScore":1,"oppScore":0,"gameTimeSeconds":460},{"timestamp":"2025-07-03T14:58:10.1516530","timeDisplay":"7:26","period":1,"actionType":"FreeThrowMade","isOppAction":true,"myTeamScore":1,"oppScore":1,"gameTimeSeconds":446},{"timestamp":"2025-07-03T14:58:18.9311050","timeDisplay":"7:22","period":1,"actionType":"FreeThrowMade","isOppAction":true,"myTeamScore":1,"oppScore":2,"gameTimeSeconds":442},{"timestamp":"2025-07-03T14:59:12.5887150","timeDisplay":"6:58","period":1,"actionType":"FieldGoalMade2pt","isOppAction":false,"myTeamScore":3,"oppScore":2,"gameTimeSeconds":418},{"timestamp":"2025-07-03T15:00:49.1751590","timeDisplay":"6:15","period":1,"actionType":"FreeThrowMade","isOppAction":true,"myTeamScore":3,"oppScore":3,"gameTimeSeconds":375},{"timestamp":"2025-07-03T15:01:00.0407090","timeDisplay":"6:10","period":1,"actionType":"FreeThrowMade","isOppAction":true,"myTeamScore":3,"oppScore":4,"gameTimeSeconds":371},{"timestamp":"2025-07-03T15:01:08.8701780","timeDisplay":"6:06","period":1,"actionType":"FieldGoalMade2pt","isOppAction":false,"myTeamScore":5,"oppScore":4,"gameTimeSeconds":367},{"timestamp":"2025-07-03T15:02:40.8072580","timeDisplay":"5:25","period":1,"actionType":"FieldGoalMade3pt","isOppAction":false,"myTeamScore":8,"oppScore":4,"gameTimeSeconds":326},{"timestamp":"2025-07-03T15:04:08.9272580","timeDisplay":"4:58","period":1,"actionType":"FieldGoalMade2pt","isOppAction":false,"myTeamScore":10,"oppScore":4,"gameTimeSeconds":299},{"timestamp":"2025-07-03T15:04:31.2403370","timeDisplay":"4:43","period":1,"actionType":"FieldGoalMade2pt","isOppAction":false,"myTeamScore":12,"oppScore":4,"gameTimeSeconds":284},{"timestamp":"2025-07-03T15:06:33.6050600","timeDisplay":"3:24","period":1,"actionType":"FieldGoalMade2pt","isOppAction":true,"myTeamScore":12,"oppScore":6,"gameTimeSeconds":204},{"timestamp":"2025-07-03T15:07:18.0991790","timeDisplay":"2:54","period":1,"actionType":"FreeThrowMade","isOppAction":true,"myTeamScore":12,"oppScore":7,"gameTimeSeconds":175},{"timestamp":"2025-07-03T15:07:26.8148410","timeDisplay":"2:49","period":1,"actionType":"FreeThrowMade","isOppAction":true,"myTeamScore":12,"oppScore":8,"gameTimeSeconds":169},{"timestamp":"2025-07-03T15:07:44.9097110","timeDisplay":"2:37","period":1,"actionType":"FieldGoalMade2pt","isOppAction":false,"myTeamScore":14,"oppScore":8,"gameTimeSeconds":157},{"timestamp":"2025-07-03T15:09:17.7811600","timeDisplay":"1:36","period":1,"actionType":"FieldGoalMade3pt","isOppAction":true,"myTeamScore":14,"oppScore":11,"gameTimeSeconds":97},{"timestamp":"2025-07-03T15:09:54.3924750","timeDisplay":"1:12","period":1,"actionType":"FieldGoalMade2pt","isOppAction":true,"myTeamScore":14,"oppScore":13,"gameTimeSeconds":73},{"timestamp":"2025-07-03T15:14:24.0803620","timeDisplay":"7:27","period":2,"actionType":"FieldGoalMade2pt","isOppAction":false,"myTeamScore":16,"oppScore":13,"gameTimeSeconds":448},{"timestamp":"2025-07-03T15:14:30.0974420","timeDisplay":"7:23","period":2,"actionType":"FieldGoalMade2pt","isOppAction":true,"myTeamScore":16,"oppScore":15,"gameTimeSeconds":443},{"timestamp":"2025-07-03T15:15:34.8199600","timeDisplay":"6:36","period":2,"actionType":"FreeThrowMade","isOppAction":true,"myTeamScore":16,"oppScore":16,"gameTimeSeconds":397},{"timestamp":"2025-07-03T15:15:55.5145080","timeDisplay":"6:21","period":2,"actionType":"FieldGoalMade2pt","isOppAction":false,"myTeamScore":18,"oppScore":16,"gameTimeSeconds":382},{"timestamp":"2025-07-03T15:16:43.0842900","timeDisplay":"5:47","period":2,"actionType":"FieldGoalMade2pt","isOppAction":true,"myTeamScore":18,"oppScore":18,"gameTimeSeconds":347},{"timestamp":"2025-07-03T15:18:06.0458470","timeDisplay":"4:46","period":2,"actionType":"FreeThrowMade","isOppAction":false,"myTeamScore":19,"oppScore":18,"gameTimeSeconds":287},{"timestamp":"2025-07-03T15:18:41.5068670","timeDisplay":"4:21","period":2,"actionType":"FieldGoalMade2pt","isOppAction":false,"myTeamScore":21,"oppScore":18,"gameTimeSeconds":261},{"timestamp":"2025-07-03T15:19:47.6288340","timeDisplay":"3:33","period":2,"actionType":"FieldGoalMade2pt","isOppAction":false,"myTeamScore":23,"oppScore":18,"gameTimeSeconds":213},{"timestamp":"2025-07-03T15:20:18.4419580","timeDisplay":"3:10","period":2,"actionType":"FieldGoalMade2pt","isOppAction":false,"myTeamScore":25,"oppScore":18,"gameTimeSeconds":191},{"timestamp":"2025-07-03T15:20:35.4554370","timeDisplay":"2:58","period":2,"actionType":"FieldGoalMade2pt","isOppAction":true,"myTeamScore":25,"oppScore":20,"gameTimeSeconds":179},{"timestamp":"2025-07-03T15:20:51.9887210","timeDisplay":"2:46","period":2,"actionType":"FieldGoalMade2pt","isOppAction":true,"myTeamScore":25,"oppScore":22,"gameTimeSeconds":167},{"timestamp":"2025-07-03T15:21:04.3519640","timeDisplay":"2:37","period":2,"actionType":"FieldGoalMade2pt","isOppAction":false,"myTeamScore":27,"oppScore":22,"gameTimeSeconds":158},{"timestamp":"2025-07-03T15:21:29.3996970","timeDisplay":"2:19","period":2,"actionType":"FieldGoalMade2pt","isOppAction":true,"myTeamScore":27,"oppScore":24,"gameTimeSeconds":139},{"timestamp":"2025-07-03T15:21:59.6089000","timeDisplay":"1:57","period":2,"actionType":"FieldGoalMade3pt","isOppAction":false,"myTeamScore":30,"oppScore":24,"gameTimeSeconds":117},{"timestamp":"2025-07-03T15:23:26.4501320","timeDisplay":"1:51","period":2,"actionType":"FieldGoalMade3pt","isOppAction":true,"myTeamScore":30,"oppScore":27,"gameTimeSeconds":112},{"timestamp":"2025-07-03T15:23:41.5268150","timeDisplay":"1:38","period":2,"actionType":"FieldGoalMade2pt","isOppAction":false,"myTeamScore":32,"oppScore":27,"gameTimeSeconds":99},{"timestamp":"2025-07-03T15:24:35.8895660","timeDisplay":"0:51","period":2,"actionType":"FieldGoalMade2pt","isOppAction":true,"myTeamScore":32,"oppScore":29,"gameTimeSeconds":51},{"timestamp":"2025-07-03T15:25:16.8961830","timeDisplay":"0:15","period":2,"actionType":"FieldGoalMade2pt","isOppAction":false,"myTeamScore":34,"oppScore":29,"gameTimeSeconds":15},{"timestamp":"2025-07-03T15:25:25.4457670","timeDisplay":"0:07","period":2,"actionType":"FieldGoalMade3pt","isOppAction":true,"myTeamScore":34,"oppScore":32,"gameTimeSeconds":8},{"timestamp":"2025-07-03T15:29:33.4729170","timeDisplay":"7:40","period":3,"actionType":"FieldGoalMade2pt","isOppAction":false,"myTeamScore":36,"oppScore":32,"gameTimeSeconds":460},{"timestamp":"2025-07-03T15:29:37.4929260","timeDisplay":"7:37","period":3,"actionType":"FieldGoalMade2pt","isOppAction":true,"myTeamScore":36,"oppScore":34,"gameTimeSeconds":458},{"timestamp":"2025-07-03T15:30:20.5316120","timeDisplay":"7:14","period":3,"actionType":"FieldGoalMade2pt","isOppAction":false,"myTeamScore":38,"oppScore":34,"gameTimeSeconds":434},{"timestamp":"2025-07-03T15:31:18.7899010","timeDisplay":"6:42","period":3,"actionType":"FieldGoalMade2pt","isOppAction":false,"myTeamScore":40,"oppScore":34,"gameTimeSeconds":402},{"timestamp":"2025-07-03T15:33:43.7341180","timeDisplay":"5:22","period":3,"actionType":"FieldGoalMade2pt","isOppAction":false,"myTeamScore":42,"oppScore":34,"gameTimeSeconds":323},{"timestamp":"2025-07-03T15:34:09.8330760","timeDisplay":"5:08","period":3,"actionType":"FreeThrowMade","isOppAction":true,"myTeamScore":42,"oppScore":35,"gameTimeSeconds":308},{"timestamp":"2025-07-03T15:35:04.9712420","timeDisplay":"4:37","period":3,"actionType":"FieldGoalMade3pt","isOppAction":true,"myTeamScore":42,"oppScore":38,"gameTimeSeconds":278},{"timestamp":"2025-07-03T15:35:52.8629800","timeDisplay":"4:11","period":3,"actionType":"FieldGoalMade2pt","isOppAction":true,"myTeamScore":42,"oppScore":40,"gameTimeSeconds":252},{"timestamp":"2025-07-03T15:36:28.2087120","timeDisplay":"3:52","period":3,"actionType":"FreeThrowMade","isOppAction":false,"myTeamScore":43,"oppScore":40,"gameTimeSeconds":232},{"timestamp":"2025-07-03T15:36:39.7245600","timeDisplay":"3:45","period":3,"actionType":"FreeThrowMade","isOppAction":false,"myTeamScore":44,"oppScore":40,"gameTimeSeconds":226},{"timestamp":"2025-07-03T15:38:22.6607590","timeDisplay":"2:49","period":3,"actionType":"FreeThrowMade","isOppAction":true,"myTeamScore":44,"oppScore":41,"gameTimeSeconds":169},{"timestamp":"2025-07-03T15:40:15.0246740","timeDisplay":"1:47","period":3,"actionType":"FieldGoalMade2pt","isOppAction":false,"myTeamScore":46,"oppScore":41,"gameTimeSeconds":108},{"timestamp":"2025-07-03T15:40:28.7721520","timeDisplay":"1:40","period":3,"actionType":"FieldGoalMade2pt","isOppAction":false,"myTeamScore":48,"oppScore":41,"gameTimeSeconds":100},{"timestamp":"2025-07-03T15:40:46.1409610","timeDisplay":"1:30","period":3,"actionType":"FieldGoalMade2pt","isOppAction":true,"myTeamScore":48,"oppScore":43,"gameTimeSeconds":91},{"timestamp":"2025-07-03T15:41:18.7314980","timeDisplay":"1:12","period":3,"actionType":"FieldGoalMade3pt","isOppAction":false,"myTeamScore":51,"oppScore":43,"gameTimeSeconds":73},{"timestamp":"2025-07-03T15:46:29.6359940","timeDisplay":"7:10","period":4,"actionType":"FieldGoalMade2pt","isOppAction":true,"myTeamScore":51,"oppScore":45,"gameTimeSeconds":430},{"timestamp":"2025-07-03T15:46:53.6068010","timeDisplay":"6:48","period":4,"actionType":"FieldGoalMade2pt","isOppAction":true,"myTeamScore":51,"oppScore":47,"gameTimeSeconds":409},{"timestamp":"2025-07-03T15:47:19.4621220","timeDisplay":"6:25","period":4,"actionType":"FieldGoalMade2pt","isOppAction":true,"myTeamScore":51,"oppScore":49,"gameTimeSeconds":386},{"timestamp":"2025-07-03T15:48:42.0821750","timeDisplay":"5:12","period":4,"actionType":"FieldGoalMade2pt","isOppAction":true,"myTeamScore":51,"oppScore":51,"gameTimeSeconds":312},{"timestamp":"2025-07-03T15:52:31.3133810","timeDisplay":"3:33","period":4,"actionType":"FieldGoalMade2pt","isOppAction":true,"myTeamScore":51,"oppScore":53,"gameTimeSeconds":213},{"timestamp":"2025-07-03T15:53:54.2659330","timeDisplay":"2:46","period":4,"actionType":"FreeThrowMade","isOppAction":false,"myTeamScore":52,"oppScore":53,"gameTimeSeconds":166},{"timestamp":"2025-07-03T15:54:18.1781320","timeDisplay":"2:33","period":4,"actionType":"FieldGoalMade2pt","isOppAction":false,"myTeamScore":54,"oppScore":53,"gameTimeSeconds":153},{"timestamp":"2025-07-03T15:55:37.6167650","timeDisplay":"1:48","period":4,"actionType":"FieldGoalMade2pt","isOppAction":false,"myTeamScore":56,"oppScore":53,"gameTimeSeconds":108},{"timestamp":"2025-07-03T15:56:40.4406370","timeDisplay":"1:13","period":4,"actionType":"FieldGoalMade2pt","isOppAction":false,"myTeamScore":58,"oppScore":53,"gameTimeSeconds":73},{"timestamp":"2025-07-03T15:58:18.1126420","timeDisplay":"0:48","period":4,"actionType":"FieldGoalMade2pt","isOppAction":false,"myTeamScore":60,"oppScore":53,"gameTimeSeconds":48},{"timestamp":"2025-07-03T15:59:14.9235900","timeDisplay":"0:39","period":4,"actionType":"FieldGoalMade3pt","isOppAction":true,"myTeamScore":60,"oppScore":56,"gameTimeSeconds":40},{"timestamp":"2025-07-03T16:01:43.4681820","timeDisplay":"0:16","period":4,"actionType":"FreeThrowMade","isOppAction":false,"myTeamScore":61,"oppScore":56,"gameTimeSeconds":17},{"timestamp":"2025-07-03T16:02:13.0126880","timeDisplay":"0:05","period":4,"actionType":"FieldGoalMade2pt","isOppAction":false,"myTeamScore":63,"oppScore":56,"gameTimeSeconds":6}],"homeTeam":"502 Elite jr 3SSB","awayTeam":"MD Rivals","periodData":[{"period":1,"durationSeconds":480},{"period":2,"durationSeconds":480},{"period":3,"durationSeconds":480},{"period":4,"durationSeconds":480}],"stats":{"biggestLead":8,"timesTied":5,"leadChanges":9,"longestRun":10}};
+
+        // Run when the page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            // Initialize shot stats
+            updateShotStats();
+            
+            // Render game flow chart
+            renderGameFlowChart();
+            
+            // Add resize handler for the game flow chart
+            window.addEventListener('resize', function() {
+                renderGameFlowChart();
+            });
+        });
+        
+        function filterShots() {
+            const selectedPeriod = document.getElementById('periodFilter').value;
+            const selectedPlayer = document.getElementById('playerFilter').value;
+            
+            // More robust selector for SVG elements
+            const myTeamShots = document.querySelectorAll('#myTeamChart circle.shot-marker, #myTeamChart g.shot-marker');
+            const oppShots = document.querySelectorAll('#opponentChart circle.shot-marker, #opponentChart g.shot-marker');
+            
+            // Filter MyTeam shots
+            let myTeamVisible = 0;
+            let myTeamMakes = 0;
+            
+            myTeamShots.forEach(shot => {
+                const period = shot.getAttribute('data-period');
+                const playerId = shot.getAttribute('data-player-id');
+                const isMade = shot.getAttribute('data-made') === 'true';
+                
+                const periodMatch = selectedPeriod === 'all' || period === selectedPeriod;
+                const playerMatch = selectedPlayer === 'all' || playerId === selectedPlayer;
+                
+                // Apply visibility
+                if (periodMatch && playerMatch) {
+                    shot.style.display = '';
+                    myTeamVisible++;
+                    if (isMade) myTeamMakes++;
+                } else {
+                    shot.style.display = 'none';
+                }
+            });
+            
+            // Filter Opponent shots (period only)
+            let oppVisible = 0;
+            let oppMakes = 0;
+            
+            oppShots.forEach(shot => {
+                const period = shot.getAttribute('data-period');
+                const isMade = shot.getAttribute('data-made') === 'true';
+                
+                const periodMatch = selectedPeriod === 'all' || period === selectedPeriod;
+                
+                // Apply visibility
+                if (periodMatch) {
+                    shot.style.display = '';
+                    oppVisible++;
+                    if (isMade) oppMakes++;
+                } else {
+                    shot.style.display = 'none';
+                }
+            });
+            
+            // Update stats
+            const myTeamPct = myTeamVisible > 0 ? (myTeamMakes / myTeamVisible * 100).toFixed(1) : '0.0';
+            document.getElementById('myTeamStats').innerHTML = 
+                `${myTeamMakes}-${myTeamVisible} (${myTeamPct}%)`;
+            
+            const oppPct = oppVisible > 0 ? (oppMakes / oppVisible * 100).toFixed(1) : '0.0';
+            document.getElementById('opponentStats').innerHTML = 
+                `${oppMakes}-${oppVisible} (${oppPct}%)`;
+        }
+
+        // Update shot stats function
+        function updateShotStats() {
+            const myTeamShots = document.querySelectorAll('#myTeamChart circle.shot-marker, #myTeamChart g.shot-marker');
+            const oppShots = document.querySelectorAll('#opponentChart circle.shot-marker, #opponentChart g.shot-marker');
+            
+            const visibleMyTeamShots = Array.from(myTeamShots).filter(shot => shot.style.display !== 'none');
+            const visibleOppShots = Array.from(oppShots).filter(shot => shot.style.display !== 'none');
+            
+            const myTeamMakes = visibleMyTeamShots.filter(shot => shot.getAttribute('data-made') === 'true').length;
+            const myTeamAttempts = visibleMyTeamShots.length;
+            const myTeamPct = myTeamAttempts > 0 ? (myTeamMakes / myTeamAttempts * 100).toFixed(1) : '0.0';
+            
+            const myTeamStats = document.getElementById('myTeamStats');
+            if (myTeamStats) {
+                myTeamStats.innerHTML = `${myTeamMakes}-${myTeamAttempts} (${myTeamPct}%)`;
+            }
+            
+            const oppMakes = visibleOppShots.filter(shot => shot.getAttribute('data-made') === 'true').length;
+            const oppAttempts = visibleOppShots.length;
+            const oppPct = oppAttempts > 0 ? (oppMakes / oppAttempts * 100).toFixed(1) : '0.0';
+            
+            const opponentStats = document.getElementById('opponentStats');
+            if (opponentStats) {
+                opponentStats.innerHTML = `${oppMakes}-${oppAttempts} (${oppPct}%)`;
+            }
+        }
+
+        // Game Flow Chart rendering function
+        function renderGameFlowChart() {
+            const data = gameFlowData;
+            if (!data || !data.plays || !Array.isArray(data.plays) || data.plays.length === 0) {
+                document.getElementById('gameFlowChart').innerHTML = 
+                    '<div style="text-align: center; padding: 20px; color: white;">No game flow data available</div>';
+                return;
+            }
+            
+            // Update stat values
+            document.getElementById('biggestLead').textContent = data.stats.biggestLead;
+            document.getElementById('timesTied').textContent = data.stats.timesTied;
+            document.getElementById('leadChanges').textContent = data.stats.leadChanges;
+            document.getElementById('longestRun').textContent = data.stats.longestRun;
+            
+            const chartContainer = document.getElementById('gameFlowChart');
+            const width = chartContainer.clientWidth;
+            const height = chartContainer.clientHeight;
+            const padding = { top: 20, right: 10, bottom: 30, left: 30 };
+            
+            // Calculate available space for drawing
+            const innerWidth = width - padding.left - padding.right;
+            const innerHeight = height - padding.top - padding.bottom;
+            
+            // Calculate maximum score for scaling
+            const maxScore = Math.max(
+                ...data.plays.map(p => Math.max(p.myTeamScore || 0, p.oppScore || 0)),
+                10 // Minimum scale to avoid empty charts
+            );
+            
+            // Create SVG element
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', width);
+            svg.setAttribute('height', height);
+            
+            // Calculate total game time and period positions
+            const periodData = data.periodData || [{ period: 1, durationSeconds: 600 }];
+            const totalGameTimeSeconds = periodData.reduce((sum, p) => sum + p.durationSeconds, 0);
+            
+            // Calculate x and y scales
+            const xScale = time => (time / totalGameTimeSeconds) * innerWidth + padding.left;
+            const yScale = score => innerHeight - (score / maxScore) * innerHeight + padding.top;
+            
+            // Sort plays chronologically
+            const plays = [...data.plays].sort((a, b) => {
+                if (a.period !== b.period) return a.period - b.period;
+                return b.gameTimeSeconds - a.gameTimeSeconds; // Time counts down
+            });
+            
+            // Create path data for team and opponent score lines
+            let teamPathData = '';
+            let oppPathData = '';
+            
+            // Add period lines and labels
+            let periodStartX = padding.left;
+            periodData.forEach((period, index) => {
+                const periodWidth = (period.durationSeconds / totalGameTimeSeconds) * innerWidth;
+                
+                if (index > 0) {
+                    // Draw period separator line
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', periodStartX);
+                    line.setAttribute('y1', padding.top);
+                    line.setAttribute('x2', periodStartX);
+                    line.setAttribute('y2', height - padding.bottom);
+                    line.setAttribute('class', 'period-line');
+                    svg.appendChild(line);
+                }
+                
+                // Add period label
+                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                const periodNum = period.period;
+                const labelText = periodNum <= 4 ? 'Q' + periodNum : 'OT' + (periodNum - 4);
+                label.setAttribute('x', periodStartX + periodWidth / 2);
+                label.setAttribute('y', padding.top - 5);
+                label.setAttribute('class', 'period-label');
+                label.textContent = labelText;
+                svg.appendChild(label);
+                
+                periodStartX += periodWidth;
+            });
+            
+            // Draw horizontal grid lines
+            for (let i = 0; i <= 5; i++) {
+                const y = padding.top + (innerHeight * i / 5);
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', padding.left);
+                line.setAttribute('x2', width - padding.right);
+                line.setAttribute('y1', y);
+                line.setAttribute('y2', y);
+                line.setAttribute('stroke', '#333');
+                line.setAttribute('stroke-width', '1');
+                svg.appendChild(line);
+                
+                // Add score label
+                const scoreLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                const score = Math.round(maxScore * (5 - i) / 5);
+                scoreLabel.setAttribute('x', padding.left - 5);
+                scoreLabel.setAttribute('y', y + 4);
+                scoreLabel.setAttribute('fill', '#999');
+                scoreLabel.setAttribute('font-size', '10');
+                scoreLabel.setAttribute('text-anchor', 'end');
+                scoreLabel.textContent = score;
+                svg.appendChild(scoreLabel);
+            }
+            
+            // Process plays to create path data
+            plays.forEach((play, index) => {
+                // Calculate x position based on period and game time
+                const periodInfo = periodData.find(p => p.period === play.period);
+                const periodDuration = periodInfo ? periodInfo.durationSeconds : 600;
+                
+                // Calculate position within the period
+                const periodTimeElapsed = periodDuration - play.gameTimeSeconds;
+                const periodTimeRatio = periodTimeElapsed / periodDuration;
+                
+                // Find the period start position
+                const periodsBeforeCurrent = periodData.filter(p => p.period < play.period);
+                const timeBeforeCurrentPeriod = periodsBeforeCurrent.reduce((sum, p) => sum + p.durationSeconds, 0);
+                
+                // Calculate overall time position
+                const totalTimeElapsed = timeBeforeCurrentPeriod + periodTimeElapsed;
+                const x = xScale(totalTimeElapsed);
+                
+                // Draw points
+                const teamY = yScale(play.myTeamScore);
+                const oppY = yScale(play.oppScore);
+                
+                // Create path data
+                if (index === 0) {
+                    teamPathData = `M ${x} ${teamY}`;
+                    oppPathData = `M ${x} ${oppY}`;
+                } else {
+                    teamPathData += ` L ${x} ${teamY}`;
+                    oppPathData += ` L ${x} ${oppY}`;
+                }
+                
+                // Add scoring points (but not for the initial 0-0 point)
+                if (index > 0) {
+                    const prevPlay = plays[index - 1];
+                    
+                    // Add team scoring point
+                    if (play.myTeamScore > prevPlay.myTeamScore) {
+                        const point = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        point.setAttribute('cx', x);
+                        point.setAttribute('cy', teamY);
+                        point.setAttribute('class', 'team-point');
+                        svg.appendChild(point);
+                    }
+                    
+                    // Add opponent scoring point
+                    if (play.oppScore > prevPlay.oppScore) {
+                        const point = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        point.setAttribute('cx', x);
+                        point.setAttribute('cy', oppY);
+                        point.setAttribute('class', 'opponent-point');
+                        svg.appendChild(point);
+                    }
+                }
+            });
+            
+            // Create and add paths for team and opponent scores
+            const teamPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            teamPath.setAttribute('d', teamPathData);
+            teamPath.setAttribute('class', 'team-line');
+            svg.appendChild(teamPath);
+            
+            const oppPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            oppPath.setAttribute('d', oppPathData);
+            oppPath.setAttribute('class', 'opponent-line');
+            svg.appendChild(oppPath);
+            
+            // Add legend
+            const legendY = height - 10;
+            
+            // Team legend
+            const teamLegendLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            teamLegendLine.setAttribute('x1', padding.left + 10);
+            teamLegendLine.setAttribute('y1', legendY);
+            teamLegendLine.setAttribute('x2', padding.left + 30);
+            teamLegendLine.setAttribute('y2', legendY);
+            teamLegendLine.setAttribute('class', 'team-line');
+            svg.appendChild(teamLegendLine);
+            
+            const teamLegendText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            teamLegendText.setAttribute('x', padding.left + 35);
+            teamLegendText.setAttribute('y', legendY + 4);
+            teamLegendText.setAttribute('fill', 'white');
+            teamLegendText.setAttribute('font-size', '10');
+            teamLegendText.textContent = data.homeTeam;
+            svg.appendChild(teamLegendText);
+            
+            // Opponent legend
+            const oppLegendLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            oppLegendLine.setAttribute('x1', padding.left + 100);
+            oppLegendLine.setAttribute('y1', legendY);
+            oppLegendLine.setAttribute('x2', padding.left + 120);
+            oppLegendLine.setAttribute('y2', legendY);
+            oppLegendLine.setAttribute('class', 'opponent-line');
+            svg.appendChild(oppLegendLine);
+            
+            const oppLegendText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            oppLegendText.setAttribute('x', padding.left + 125);
+            oppLegendText.setAttribute('y', legendY + 4);
+            oppLegendText.setAttribute('fill', 'white');
+            oppLegendText.setAttribute('font-size', '10');
+            oppLegendText.textContent = data.awayTeam;
+            svg.appendChild(oppLegendText);
+            
+            // Add the SVG to the chart container
+            chartContainer.innerHTML = '';
+            chartContainer.appendChild(svg);
+        }
+    
+</script>
+</head><body>
+<h1>Game Summary</h1>
+<div class='summary'>
+<p class='team-names'><strong>502 Elite jr 3SSB</strong> vs <strong>MD Rivals</strong></p>
+<p class='score'>63 - 56</p>
+<p class='game-info'>July 03, 2025 - 3:00 PM | ESPN State Farm Arena - Neutral - Tournament - Game Duration: 01:08 | Status: Final</p>
+</div>
+<div class='game-flow-container'>
+<div class='game-flow-title'>Game Flow</div>
+<div id='gameFlowChart' class='game-flow-chart'></div>
+<div class='game-stats-grid'>
+  <div class='game-stat-box'><div class='game-stat-label'>Biggest Lead</div><div id='biggestLead' class='game-stat-value'>0</div></div>
+  <div class='game-stat-box'><div class='game-stat-label'>Times Tied</div><div id='timesTied' class='game-stat-value'>0</div></div>
+  <div class='game-stat-box'><div class='game-stat-label'>Lead Changes</div><div id='leadChanges' class='game-stat-value'>0</div></div>
+  <div class='game-stat-box'><div class='game-stat-label'>Longest Run</div><div id='longestRun' class='game-stat-value'>0</div></div>
+</div>
+</div>
+<h2>Box Score</h2>
+<table>
+<tr><th>Player</th><th>Minutes</th><th>FG</th><th>3P</th><th>FT</th><th>OREB</th><th>DREB</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th>Fouls</th><th>+/-</th><th>Points</th></tr>
+<tr><td>#0 Dejuan Garvin</td><td>16:03</td><td>3/3 (100.0%)</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>3</td><td>1</td><td>4</td><td>0</td><td>3</td><td>0</td><td>1</td><td>1</td><td>4</td><td>6</td></tr>
+<tr><td>#1 Derez Grider</td><td>22:45</td><td>1/5 (20.0%)</td><td>0/0 (0.0%)</td><td>1/2 (50.0%)</td><td>2</td><td>2</td><td>4</td><td>8</td><td>2</td><td>0</td><td>2</td><td>1</td><td>16</td><td>3</td></tr>
+<tr><td>#2 Bennett Dowd-Mattingly</td><td>05:31</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>-11</td><td>0</td></tr>
+<tr><td>#3 Jaxson Branch</td><td>19:01</td><td>2/5 (40.0%)</td><td>0/2 (0.0%)</td><td>2/2 (100.0%)</td><td>1</td><td>1</td><td>2</td><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td><td>12</td><td>6</td></tr>
+<tr><td>#4 Nolan Harris</td><td>18:26</td><td>2/9 (22.2%)</td><td>1/5 (20.0%)</td><td>0/0 (0.0%)</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>8</td><td>5</td></tr>
+<tr><td>#5 Jabir Walker</td><td>19:23</td><td>3/10 (30.0%)</td><td>0/0 (0.0%)</td><td>1/4 (25.0%)</td><td>6</td><td>1</td><td>7</td><td>1</td><td>1</td><td>2</td><td>0</td><td>3</td><td>15</td><td>7</td></tr>
+<tr><td>#5 Levi Persley</td><td>00:00</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td>#10 Ayden Mozee</td><td>16:27</td><td>2/4 (50.0%)</td><td>0/1 (0.0%)</td><td>0/2 (0.0%)</td><td>1</td><td>2</td><td>3</td><td>1</td><td>1</td><td>0</td><td>2</td><td>2</td><td>10</td><td>4</td></tr>
+<tr><td>#11 Hunter Wolf</td><td>12:31</td><td>1/2 (50.0%)</td><td>0/1 (0.0%)</td><td>0/0 (0.0%)</td><td>1</td><td>5</td><td>6</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>-8</td><td>2</td></tr>
+<tr><td>#12 Brady Logsdon</td><td>00:00</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td>#13 Jayden Camp</td><td>00:00</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>0/0 (0.0%)</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td>#13 Q Woods</td><td>20:26</td><td>9/23 (39.1%)</td><td>1/10 (10.0%)</td><td>2/4 (50.0%)</td><td>3</td><td>6</td><td>9</td><td>1</td><td>0</td><td>1</td><td>2</td><td>3</td><td>1</td><td>21</td></tr>
+<tr><td>#14 Jakob City</td><td>09:22</td><td>4/8 (50.0%)</td><td>1/2 (50.0%)</td><td>0/0 (0.0%)</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>-12</td><td>9</td></tr>
+<tr class='totals-row'><td>TEAM TOTALS</td><td>32:00</td><td>27/69 (39.1%)</td><td>3/21 (14.3%)</td><td>6/14 (42.9%)</td><td>17</td><td>18</td><td>35</td><td>11</td><td>8</td><td>3</td><td>9</td><td>10</td><td>7</td><td>63</td></tr>
+<tr class='totals-row'><td>OPPONENT TOTALS</td><td>32:00</td><td>21/55 (38.2%)</td><td>5/15 (33.3%)</td><td>9/12 (75.0%)</td><td>17</td><td>22</td><td>39</td><td>9</td><td>2</td><td>4</td><td>26</td><td>12</td><td>-7</td><td>56</td></tr>
+</table>
+<h2>Advanced Statistics</h2>
+<table>
+<tr><th>Player</th><th>AST/TO</th><th>AST%</th><th>REB%</th><th>TOV%</th><th>PIE</th><th>eFG%</th><th>TS%</th><th>OFFRTG</th><th>DEFRTG</th><th>NETRTG</th></tr>
+<tr><td>#0 Dejuan Garvin</td><td>0.0</td><td>0.0%</td><td>15.4%</td><td>25.0%</td><td>19.3</td><td>100.0%</td><td>100.0%</td><td>45.9</td><td>38.1</td><td class='positive'>7.8</td></tr>
+<tr><td>#1 Derez Grider</td><td>4.0</td><td>33.3%</td><td>9.3%</td><td>25.4%</td><td>9.3</td><td>20.0%</td><td>25.5%</td><td>64.6</td><td>43.2</td><td class='positive'>21.3</td></tr>
+<tr><td>#2 Bennett Dowd-Mattingly</td><td>0.0</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0</td><td>0.0%</td><td>0.0%</td><td>21.1</td><td>83.3</td><td class='negative'>-62.3</td></tr>
+<tr><td>#3 Jaxson Branch</td><td>0.0</td><td>0.0%</td><td>5.4%</td><td>14.5%</td><td>6.6</td><td>40.0%</td><td>51.0%</td><td>58.9</td><td>41.9</td><td class='positive'>17.0</td></tr>
+<tr><td>#4 Nolan Harris</td><td>0.0</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>-2.9</td><td>27.8%</td><td>27.8%</td><td>61.9</td><td>48.4</td><td class='positive'>13.5</td></tr>
+<tr><td>#5 Jabir Walker</td><td>1.0</td><td>5.9%</td><td>21.2%</td><td>0.0%</td><td>6.7</td><td>30.0%</td><td>29.8%</td><td>58.6</td><td>36.6</td><td class='positive'>22.0</td></tr>
+<tr><td>#5 Levi Persley</td><td>0.0</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0</td><td>0.0%</td><td>0.0%</td><td>0.0</td><td>0.0</td><td class='positive'>0.0</td></tr>
+<tr><td>#10 Ayden Mozee</td><td>0.5</td><td>5.9%</td><td>9.1%</td><td>29.1%</td><td>1.5</td><td>50.0%</td><td>41.0%</td><td>63.3</td><td>46.7</td><td class='positive'>16.7</td></tr>
+<tr><td>#11 Hunter Wolf</td><td>0.0</td><td>0.0%</td><td>23.1%</td><td>33.3%</td><td>10.5</td><td>50.0%</td><td>50.0%</td><td>51.2</td><td>68.2</td><td class='negative'>-17.0</td></tr>
+<tr><td>#12 Brady Logsdon</td><td>0.0</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0</td><td>0.0%</td><td>0.0%</td><td>0.0</td><td>0.0</td><td class='positive'>0.0</td></tr>
+<tr><td>#13 Jayden Camp</td><td>0.0</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0</td><td>0.0%</td><td>0.0%</td><td>0.0</td><td>0.0</td><td class='positive'>0.0</td></tr>
+<tr><td>#13 Q Woods</td><td>0.5</td><td>10.0%</td><td>24.3%</td><td>7.5%</td><td>13.6</td><td>41.3%</td><td>42.4%</td><td>54.3</td><td>50.7</td><td class='positive'>3.6</td></tr>
+<tr><td>#14 Jakob City</td><td>0.0</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>14.7</td><td>56.2%</td><td>56.2%</td><td>34.4</td><td>71.9</td><td class='negative'>-37.5</td></tr>
+<tr class='totals-row'><td>TEAM TOTALS</td><td>1.2</td><td>275.0%</td><td>59.3%</td><td>10.7%</td><td>32.5</td><td>41.3%</td><td>41.9%</td><td>55.3</td><td>48.3</td><td>7.0</td></tr>
+<tr class='totals-row'><td>OPPONENT TOTALS</td><td>0.3</td><td>128.6%</td><td>66.1%</td><td>30.1%</td><td>25.9</td><td>42.7%</td><td>46.4%</td><td>48.3</td><td>55.3</td><td class='negative'>-7.0</td></tr>
+</table>
+<div class='filter-container'>
+<div class='filter-group'>
+<label class='filter-label'>Period</label>
+<select id='periodFilter' onchange='filterShots()'>
+<option value='all'>All Periods</option>
+<option value='1'>Period 1</option>
+<option value='2'>Period 2</option>
+<option value='3'>Period 3</option>
+<option value='4'>Period 4</option>
+</select>
+</div>
+<div class='filter-group'>
+<label class='filter-label'>Player</label>
+<select id='playerFilter' onchange='filterShots()'>
+<option value='all'>All Players</option>
+<option value='c7f26c34-9c69-42cb-a9ba-92d9caa2af90'>#0 Dejuan Garvin</option>
+<option value='77384218-1570-4c54-985c-e2af7c20cd4b'>#1 Derez Grider</option>
+<option value='a5d28bb3-d8d5-40e0-984c-39ca15887a1e'>#2 Bennett Dowd-Mattingly</option>
+<option value='0ac70655-26ec-4726-9ebd-13dd0ad4e7c3'>#3 Jaxson Branch</option>
+<option value='3f308adb-9315-4158-9baa-cf8dc4809e42'>#4 Nolan Harris</option>
+<option value='157355e0-8a41-4090-9150-818c9eacc7eb'>#5 Jabir Walker</option>
+<option value='b99a0a71-5cff-44f6-aecb-de8bf04e39d1'>#5 Levi Persley</option>
+<option value='618c584a-872d-4008-aa22-42be13e1852f'>#10 Ayden Mozee</option>
+<option value='d21558c9-4a86-4fac-97d2-d9962fb27409'>#11 Hunter Wolf</option>
+<option value='7c4c6e39-3608-4c7f-93dc-689ad2f665d3'>#12 Brady Logsdon</option>
+<option value='2a211e6e-e955-475b-8557-40bab3d40519'>#13 Jayden Camp</option>
+<option value='f1f5c580-2d69-4d8a-a3fd-728ded56068b'>#13 Q Woods</option>
+<option value='a92c42a1-96d7-4ca1-9bdf-71ad71bba332'>#14 Jakob City</option>
+</select>
+</div>
+<table class='stats-table'>
+<tr>
+<th>502 Elite jr 3SSB</th>
+<th>MD Rivals</th>
+</tr>
+<tr>
+<td id='myTeamStats'></td>
+<td id='opponentStats'></td>
+</tr>
+</table>
+</div>
+<div class='shot-container'>
+<div class='shot-chart'>
+<div id='myTeamChart'>
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 520' width='100%' height='400px'>
+<rect width='500' height='50' fill='#FF4500'/>
+<text x='250' y='25' 
+                fill='white' 
+                font-size='20' 
+                text-anchor='middle' 
+                dominant-baseline='middle' 
+                font-weight='bold'>502 Elite jr 3SSB</text>
+<rect y='50' 
+                width='500' 
+                height='470' 
+                fill='#C19A6B'/>
+<rect y='50' 
+                width='500' 
+                height='470' 
+                stroke='black' 
+                fill='none' 
+                stroke-width='2'/>
+<path d='M 52 102.5 
+                A 198 198 0 0 0 
+                448 102.5' 
+                stroke='black' 
+                fill='none' 
+                stroke-width='2'/>
+<line x1='52' y1='102.5' 
+                x2='52' y2='50' 
+                stroke='black' 
+                stroke-width='2'/>
+<line x1='448' y1='102.5' 
+                x2='448' y2='50' 
+                stroke='black' 
+                stroke-width='2'/>
+<rect x='190' 
+                y='50' 
+                width='120' 
+                height='190' 
+                fill='#00008B'/>
+<rect x='190' 
+                y='50' 
+                width='120' 
+                height='190' 
+                stroke='black' 
+                fill='none' 
+                stroke-width='2'/>
+<line x1='190' 
+                y1='240' 
+                x2='310' 
+                y2='240' 
+                stroke='black' 
+                stroke-width='2'/>
+<path d='M 190 240 
+                A 60 60 0 1 1 
+                310 240' 
+                stroke='black' 
+                fill='none' 
+                stroke-width='2'/>
+<line x1='220' 
+                y1='90' 
+                x2='280' 
+                y2='90' 
+                stroke='white' 
+                stroke-width='2'/>
+<circle cx='250' 
+                cy='100' 
+                r='7' 
+                stroke='red' 
+                fill='none' 
+                stroke-width='2'/>
+<circle cx='286.28064' 
+                        cy='110.54962' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='157355e0-8a41-4090-9150-818c9eacc7eb' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='1'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='3f308adb-9315-4158-9baa-cf8dc4809e42' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='1'>
+<line x1='274.62952' 
+                        y1='149.00955' 
+                        x2='285.53864' 
+                        y2='159.91864' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='274.62952' 
+                        y1='159.91864' 
+                        x2='285.53864' 
+                        y2='149.00955' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='286.28064' 
+                        cy='108.109924' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='618c584a-872d-4008-aa22-42be13e1852f' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='1'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='3f308adb-9315-4158-9baa-cf8dc4809e42' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='1'>
+<line x1='24.288897' 
+                        y1='100.21567' 
+                        x2='35.197987' 
+                        y2='111.124756' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='24.288897' 
+                        y1='111.124756' 
+                        x2='35.197987' 
+                        y2='100.21567' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='157355e0-8a41-4090-9150-818c9eacc7eb' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='1'>
+<line x1='231.25368' 
+                        y1='113.63399' 
+                        x2='242.16277' 
+                        y2='124.543076' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='231.25368' 
+                        y1='124.543076' 
+                        x2='242.16277' 
+                        y2='113.63399' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='157355e0-8a41-4090-9150-818c9eacc7eb' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='1'>
+<line x1='256.03986' 
+                        y1='113.63399' 
+                        x2='266.94897' 
+                        y2='124.543076' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='256.03986' 
+                        y1='124.543076' 
+                        x2='266.94897' 
+                        y2='113.63399' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='382.9468' 
+                        cy='278.88855' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='3f308adb-9315-4158-9baa-cf8dc4809e42' 
+                    data-made='true'
+                    data-zone='19.75+'
+                    data-period='1'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='157355e0-8a41-4090-9150-818c9eacc7eb' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='1'>
+<line x1='211.42471' 
+                        y1='111.19432' 
+                        x2='222.3338' 
+                        y2='122.10341' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='211.42471' 
+                        y1='122.10341' 
+                        x2='222.3338' 
+                        y2='111.19432' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='214.40063' 
+                        cy='123.967926' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='c7f26c34-9c69-42cb-a9ba-92d9caa2af90' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='1'/>
+<circle cx='277.60544' 
+                        cy='108.109924' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='c7f26c34-9c69-42cb-a9ba-92d9caa2af90' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='1'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='3f308adb-9315-4158-9baa-cf8dc4809e42' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='1'>
+<line x1='123.4337' 
+                        y1='292.95157' 
+                        x2='134.34279' 
+                        y2='303.8607' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='123.4337' 
+                        y1='303.8607' 
+                        x2='134.34279' 
+                        y2='292.95157' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='f1f5c580-2d69-4d8a-a3fd-728ded56068b' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='1'>
+<line x1='466.7226' 
+                        y1='106.31491' 
+                        x2='477.6317' 
+                        y2='117.224' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='466.7226' 
+                        y1='117.224' 
+                        x2='477.6317' 
+                        y2='106.31491' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='286.28064' 
+                        cy='116.648865' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='0ac70655-26ec-4726-9ebd-13dd0ad4e7c3' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='1'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='f1f5c580-2d69-4d8a-a3fd-728ded56068b' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='1'>
+<line x1='243.64677' 
+                        y1='151.44925' 
+                        x2='254.55586' 
+                        y2='162.35834' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='243.64677' 
+                        y1='162.35834' 
+                        x2='254.55586' 
+                        y2='151.44925' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='d21558c9-4a86-4fac-97d2-d9962fb27409' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='1'>
+<line x1='15.613726' 
+                        y1='120.953094' 
+                        x2='26.522818' 
+                        y2='131.86218' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='15.613726' 
+                        y1='131.86218' 
+                        x2='26.522818' 
+                        y2='120.953094' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='f1f5c580-2d69-4d8a-a3fd-728ded56068b' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='1'>
+<line x1='239.92885' 
+                        y1='147.78972' 
+                        x2='250.83794' 
+                        y2='158.6988' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='239.92885' 
+                        y1='158.6988' 
+                        x2='250.83794' 
+                        y2='147.78972' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='a92c42a1-96d7-4ca1-9bdf-71ad71bba332' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='1'>
+<line x1='239.92885' 
+                        y1='149.00955' 
+                        x2='250.83794' 
+                        y2='159.91864' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='239.92885' 
+                        y1='159.91864' 
+                        x2='250.83794' 
+                        y2='149.00955' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='f1f5c580-2d69-4d8a-a3fd-728ded56068b' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='1'>
+<line x1='396.0819' 
+                        y1='253.91646' 
+                        x2='406.99103' 
+                        y2='264.82556' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='396.0819' 
+                        y1='264.82556' 
+                        x2='406.99103' 
+                        y2='253.91646' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='a92c42a1-96d7-4ca1-9bdf-71ad71bba332' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='1'>
+<line x1='282.06537' 
+                        y1='112.41414' 
+                        x2='292.9745' 
+                        y2='123.32323' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='282.06537' 
+                        y1='123.32323' 
+                        x2='292.9745' 
+                        y2='112.41414' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='a92c42a1-96d7-4ca1-9bdf-71ad71bba332' 
+                    data-made='false'
+                    data-zone='6-13'
+                    data-period='1'>
+<line x1='361.38123' 
+                        y1='135.59123' 
+                        x2='372.29034' 
+                        y2='146.50032' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='361.38123' 
+                        y1='146.50032' 
+                        x2='372.29034' 
+                        y2='135.59123' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='f1f5c580-2d69-4d8a-a3fd-728ded56068b' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='2'>
+<line x1='474.15845' 
+                        y1='141.69048' 
+                        x2='485.06757' 
+                        y2='152.59956' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='474.15845' 
+                        y1='152.59956' 
+                        x2='485.06757' 
+                        y2='141.69048' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='157355e0-8a41-4090-9150-818c9eacc7eb' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='2'>
+<line x1='220.0999' 
+                        y1='130.71187' 
+                        x2='231.00899' 
+                        y2='141.62096' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='220.0999' 
+                        y1='141.62096' 
+                        x2='231.00899' 
+                        y2='130.71187' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='220.5972' 
+                        cy='122.74809' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='157355e0-8a41-4090-9150-818c9eacc7eb' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='2'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='f1f5c580-2d69-4d8a-a3fd-728ded56068b' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='2'>
+<line x1='446.89362' 
+                        y1='184.38515' 
+                        x2='457.80273' 
+                        y2='195.29424' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='446.89362' 
+                        y1='195.29424' 
+                        x2='457.80273' 
+                        y2='184.38515' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='289.99857' 
+                        cy='114.20915' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='3f308adb-9315-4158-9baa-cf8dc4809e42' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='2'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='3f308adb-9315-4158-9baa-cf8dc4809e42' 
+                    data-made='false'
+                    data-zone='6-13'
+                    data-period='2'>
+<line x1='306.85156' 
+                        y1='122.17293' 
+                        x2='317.76068' 
+                        y2='133.08202' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='306.85156' 
+                        y1='133.08202' 
+                        x2='317.76068' 
+                        y2='122.17293' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='157355e0-8a41-4090-9150-818c9eacc7eb' 
+                    data-made='false'
+                    data-zone='6-13'
+                    data-period='2'>
+<line x1='295.69778' 
+                        y1='222.2004' 
+                        x2='306.6069' 
+                        y2='233.10948' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='295.69778' 
+                        y1='233.10948' 
+                        x2='306.6069' 
+                        y2='222.2004' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='618c584a-872d-4008-aa22-42be13e1852f' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='2'>
+<line x1='165.57024' 
+                        y1='302.7103' 
+                        x2='176.47932' 
+                        y2='313.61942' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='165.57024' 
+                        y1='313.61942' 
+                        x2='176.47932' 
+                        y2='302.7103' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='291.23785' 
+                        cy='116.648865' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='157355e0-8a41-4090-9150-818c9eacc7eb' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='2'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='0ac70655-26ec-4726-9ebd-13dd0ad4e7c3' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='2'>
+<line x1='299.4157' 
+                        y1='116.073685' 
+                        x2='310.32483' 
+                        y2='126.98277' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='299.4157' 
+                        y1='126.98277' 
+                        x2='310.32483' 
+                        y2='116.073685' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='225.55444' 
+                        cy='136.16641' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='f1f5c580-2d69-4d8a-a3fd-728ded56068b' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='2'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='0ac70655-26ec-4726-9ebd-13dd0ad4e7c3' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='2'>
+<line x1='469.2012' 
+                        y1='106.31491' 
+                        x2='480.11032' 
+                        y2='117.224' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='469.2012' 
+                        y1='117.224' 
+                        x2='480.11032' 
+                        y2='106.31491' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='283.802' 
+                        cy='112.98929' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='f1f5c580-2d69-4d8a-a3fd-728ded56068b' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='2'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='f1f5c580-2d69-4d8a-a3fd-728ded56068b' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='2'>
+<line x1='106.08336' 
+                        y1='275.87366' 
+                        x2='116.99245' 
+                        y2='286.78278' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='106.08336' 
+                        y1='286.78278' 
+                        x2='116.99245' 
+                        y2='275.87366' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='216.87926' 
+                        cy='102.01068' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='d21558c9-4a86-4fac-97d2-d9962fb27409' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='2'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='77384218-1570-4c54-985c-e2af7c20cd4b' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='2'>
+<line x1='237.45023' 
+                        y1='153.88896' 
+                        x2='248.35931' 
+                        y2='164.79805' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='237.45023' 
+                        y1='164.79805' 
+                        x2='248.35931' 
+                        y2='153.88896' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='77384218-1570-4c54-985c-e2af7c20cd4b' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='2'>
+<line x1='238.68954' 
+                        y1='146.56989' 
+                        x2='249.59863' 
+                        y2='157.47897' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='238.68954' 
+                        y1='157.47897' 
+                        x2='249.59863' 
+                        y2='146.56989' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='73.11929' 
+                        cy='254.49161' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='f1f5c580-2d69-4d8a-a3fd-728ded56068b' 
+                    data-made='true'
+                    data-zone='19.75+'
+                    data-period='2'/>
+<circle cx='218.11858' 
+                        cy='137.38625' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='618c584a-872d-4008-aa22-42be13e1852f' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='2'/>
+<circle cx='283.802' 
+                        cy='116.648865' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='a92c42a1-96d7-4ca1-9bdf-71ad71bba332' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='2'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='f1f5c580-2d69-4d8a-a3fd-728ded56068b' 
+                    data-made='false'
+                    data-zone='13-19.75'
+                    data-period='3'>
+<line x1='228.0938' 
+                        y1='287.0676' 
+                        x2='239.00288' 
+                        y2='297.9767' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='228.0938' 
+                        y1='297.9767' 
+                        x2='239.00288' 
+                        y2='287.0676' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='213.71936' 
+                        cy='109.545044' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='c7f26c34-9c69-42cb-a9ba-92d9caa2af90' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='3'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='f1f5c580-2d69-4d8a-a3fd-728ded56068b' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='3'>
+<line x1='240.4869' 
+                        y1='156.54393' 
+                        x2='251.39598' 
+                        y2='167.45302' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='240.4869' 
+                        y1='167.45302' 
+                        x2='251.39598' 
+                        y2='156.54393' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='248.42006' 
+                        cy='131.5023' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='f1f5c580-2d69-4d8a-a3fd-728ded56068b' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='3'/>
+<circle cx='289.31732' 
+                        cy='116.864136' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='0ac70655-26ec-4726-9ebd-13dd0ad4e7c3' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='3'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='157355e0-8a41-4090-9150-818c9eacc7eb' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='3'>
+<line x1='197.11104' 
+                        y1='113.84927' 
+                        x2='208.02013' 
+                        y2='124.75836' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='197.11104' 
+                        y1='124.75836' 
+                        x2='208.02013' 
+                        y2='113.84927' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='618c584a-872d-4008-aa22-42be13e1852f' 
+                    data-made='false'
+                    data-zone='6-13'
+                    data-period='3'>
+<line x1='183.47862' 
+                        y1='117.50882' 
+                        x2='194.38771' 
+                        y2='128.41791' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='183.47862' 
+                        y1='128.41791' 
+                        x2='194.38771' 
+                        y2='117.50882' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='206.28351' 
+                        cy='130.28244' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='f1f5c580-2d69-4d8a-a3fd-728ded56068b' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='3'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='f1f5c580-2d69-4d8a-a3fd-728ded56068b' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='3'>
+<line x1='33.522125' 
+                        y1='152.8844' 
+                        x2='44.431213' 
+                        y2='163.79349' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='33.522125' 
+                        y1='163.79349' 
+                        x2='44.431213' 
+                        y2='152.8844' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='157355e0-8a41-4090-9150-818c9eacc7eb' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='3'>
+<line x1='266.51236' 
+                        y1='122.3882' 
+                        x2='277.42148' 
+                        y2='133.29729' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='266.51236' 
+                        y1='133.29729' 
+                        x2='277.42148' 
+                        y2='122.3882' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='3f308adb-9315-4158-9baa-cf8dc4809e42' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='3'>
+<line x1='347.06754' 
+                        y1='296.82635' 
+                        x2='357.97665' 
+                        y2='307.73547' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='347.06754' 
+                        y1='307.73547' 
+                        x2='357.97665' 
+                        y2='296.82635' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='0ac70655-26ec-4726-9ebd-13dd0ad4e7c3' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='3'>
+<line x1='19.889708' 
+                        y1='150.4447' 
+                        x2='30.7988' 
+                        y2='161.35379' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='19.889708' 
+                        y1='161.35379' 
+                        x2='30.7988' 
+                        y2='150.4447' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='250.89867' 
+                        cy='127.84274' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='a92c42a1-96d7-4ca1-9bdf-71ad71bba332' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='3'/>
+<circle cx='285.59937' 
+                        cy='113.20459' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='a92c42a1-96d7-4ca1-9bdf-71ad71bba332' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='3'/>
+<circle cx='93.50631' 
+                        cy='269.34506' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='a92c42a1-96d7-4ca1-9bdf-71ad71bba332' 
+                    data-made='true'
+                    data-zone='19.75+'
+                    data-period='3'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='f1f5c580-2d69-4d8a-a3fd-728ded56068b' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='3'>
+<line x1='272.70892' 
+                        y1='107.750046' 
+                        x2='283.61804' 
+                        y2='118.659134' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='272.70892' 
+                        y1='118.659134' 
+                        x2='283.61804' 
+                        y2='107.750046' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='a92c42a1-96d7-4ca1-9bdf-71ad71bba332' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='3'>
+<line x1='457.36615' 
+                        y1='176.0615' 
+                        x2='468.27527' 
+                        y2='186.97058' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='457.36615' 
+                        y1='186.97058' 
+                        x2='468.27527' 
+                        y2='176.0615' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='f1f5c580-2d69-4d8a-a3fd-728ded56068b' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='3'>
+<line x1='466.04132' 
+                        y1='118.72867' 
+                        x2='476.95044' 
+                        y2='129.63776' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='466.04132' 
+                        y1='129.63776' 
+                        x2='476.95044' 
+                        y2='118.72867' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='3f308adb-9315-4158-9baa-cf8dc4809e42' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='4'>
+<line x1='461.08408' 
+                        y1='116.28897' 
+                        x2='471.9932' 
+                        y2='127.19806' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='461.08408' 
+                        y1='127.19806' 
+                        x2='471.9932' 
+                        y2='116.28897' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='77384218-1570-4c54-985c-e2af7c20cd4b' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='4'>
+<line x1='228.0938' 
+                        y1='134.58669' 
+                        x2='239.00288' 
+                        y2='145.49577' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='228.0938' 
+                        y1='145.49577' 
+                        x2='239.00288' 
+                        y2='134.58669' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='77384218-1570-4c54-985c-e2af7c20cd4b' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='4'>
+<line x1='214.46138' 
+                        y1='135.80653' 
+                        x2='225.37047' 
+                        y2='146.71562' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='214.46138' 
+                        y1='146.71562' 
+                        x2='225.37047' 
+                        y2='135.80653' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='f1f5c580-2d69-4d8a-a3fd-728ded56068b' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='4'>
+<line x1='369.37512' 
+                        y1='307.805' 
+                        x2='380.28424' 
+                        y2='318.7141' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='369.37512' 
+                        y1='318.7141' 
+                        x2='380.28424' 
+                        y2='307.805' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='3f308adb-9315-4158-9baa-cf8dc4809e42' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='4'>
+<line x1='287.58066' 
+                        y1='138.24622' 
+                        x2='298.48978' 
+                        y2='149.1553' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='287.58066' 
+                        y1='149.1553' 
+                        x2='298.48978' 
+                        y2='138.24622' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='286.83865' 
+                        cy='108.325195' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='f1f5c580-2d69-4d8a-a3fd-728ded56068b' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='4'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='f1f5c580-2d69-4d8a-a3fd-728ded56068b' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='4'>
+<line x1='268.991' 
+                        y1='129.70729' 
+                        x2='279.90012' 
+                        y2='140.61638' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='268.991' 
+                        y1='140.61638' 
+                        x2='279.90012' 
+                        y2='129.70729' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='250.89867' 
+                        cy='140.04123' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='77384218-1570-4c54-985c-e2af7c20cd4b' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='4'/>
+<circle cx='258.3345' 
+                        cy='142.48093' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='f1f5c580-2d69-4d8a-a3fd-728ded56068b' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='4'/>
+<circle cx='200.08694' 
+                        cy='113.20459' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='f1f5c580-2d69-4d8a-a3fd-728ded56068b' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='4'/>
+<circle cx='288.07797' 
+                        cy='120.52367' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='f1f5c580-2d69-4d8a-a3fd-728ded56068b' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='4'/>
+</svg>
+
+</div>
+</div>
+<div class='shot-chart'>
+<div id='opponentChart'>
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 520' width='100%' height='400px'>
+<rect width='500' height='50' fill='#FF4500'/>
+<text x='250' y='25' 
+                fill='white' 
+                font-size='20' 
+                text-anchor='middle' 
+                dominant-baseline='middle' 
+                font-weight='bold'>MD Rivals</text>
+<rect y='50' 
+                width='500' 
+                height='470' 
+                fill='#C19A6B'/>
+<rect y='50' 
+                width='500' 
+                height='470' 
+                stroke='black' 
+                fill='none' 
+                stroke-width='2'/>
+<path d='M 52 102.5 
+                A 198 198 0 0 0 
+                448 102.5' 
+                stroke='black' 
+                fill='none' 
+                stroke-width='2'/>
+<line x1='52' y1='102.5' 
+                x2='52' y2='50' 
+                stroke='black' 
+                stroke-width='2'/>
+<line x1='448' y1='102.5' 
+                x2='448' y2='50' 
+                stroke='black' 
+                stroke-width='2'/>
+<rect x='190' 
+                y='50' 
+                width='120' 
+                height='190' 
+                fill='#00008B'/>
+<rect x='190' 
+                y='50' 
+                width='120' 
+                height='190' 
+                stroke='black' 
+                fill='none' 
+                stroke-width='2'/>
+<line x1='190' 
+                y1='240' 
+                x2='310' 
+                y2='240' 
+                stroke='black' 
+                stroke-width='2'/>
+<path d='M 190 240 
+                A 60 60 0 1 1 
+                310 240' 
+                stroke='black' 
+                fill='none' 
+                stroke-width='2'/>
+<line x1='220' 
+                y1='90' 
+                x2='280' 
+                y2='90' 
+                stroke='white' 
+                stroke-width='2'/>
+<circle cx='250' 
+                cy='100' 
+                r='7' 
+                stroke='red' 
+                fill='none' 
+                stroke-width='2'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='1'>
+<line x1='272.70892' 
+                        y1='105.31035' 
+                        x2='283.61804' 
+                        y2='116.21944' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='272.70892' 
+                        y1='116.21944' 
+                        x2='283.61804' 
+                        y2='105.31035' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='1'>
+<line x1='28.564863' 
+                        y1='128.48744' 
+                        x2='39.473953' 
+                        y2='139.39653' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='28.564863' 
+                        y1='139.39653' 
+                        x2='39.473953' 
+                        y2='128.48744' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='1'>
+<line x1='266.51236' 
+                        y1='119.94852' 
+                        x2='277.42148' 
+                        y2='130.8576' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='266.51236' 
+                        y1='130.8576' 
+                        x2='277.42148' 
+                        y2='119.94852' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='6-13'
+                    data-period='1'>
+<line x1='335.91376' 
+                        y1='137.02638' 
+                        x2='346.82288' 
+                        y2='147.93547' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='335.91376' 
+                        y1='147.93547' 
+                        x2='346.82288' 
+                        y2='137.02638' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='1'>
+<line x1='277.6662' 
+                        y1='121.168365' 
+                        x2='288.57532' 
+                        y2='132.07745' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='277.6662' 
+                        y1='132.07745' 
+                        x2='288.57532' 
+                        y2='121.168365' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='1'>
+<line x1='267.7517' 
+                        y1='152.8844' 
+                        x2='278.66083' 
+                        y2='163.79349' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='267.7517' 
+                        y1='163.79349' 
+                        x2='278.66083' 
+                        y2='152.8844' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='248.42006' 
+                        cy='133.94199' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='1'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='6-13'
+                    data-period='1'>
+<line x1='282.6234' 
+                        y1='157.7638' 
+                        x2='293.53253' 
+                        y2='168.67288' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='282.6234' 
+                        y1='168.67288' 
+                        x2='293.53253' 
+                        y2='157.7638' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='1'>
+<line x1='229.3331' 
+                        y1='154.10423' 
+                        x2='240.24219' 
+                        y2='165.01332' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='229.3331' 
+                        y1='165.01332' 
+                        x2='240.24219' 
+                        y2='154.10423' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='389.7014' 
+                        cy='290.08246' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='true'
+                    data-zone='19.75+'
+                    data-period='1'/>
+<circle cx='208.76215' 
+                        cy='130.28244' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='1'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='13-19.75'
+                    data-period='1'>
+<line x1='110.35934' 
+                        y1='118.72867' 
+                        x2='121.268425' 
+                        y2='129.63776' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='110.35934' 
+                        y1='129.63776' 
+                        x2='121.268425' 
+                        y2='118.72867' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='1'>
+<line x1='238.00829' 
+                        y1='160.20348' 
+                        x2='248.91737' 
+                        y2='171.11256' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='238.00829' 
+                        y1='171.11256' 
+                        x2='248.91737' 
+                        y2='160.20348' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='2'>
+<line x1='241.72621' 
+                        y1='151.66455' 
+                        x2='252.6353' 
+                        y2='162.57364' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='241.72621' 
+                        y1='162.57364' 
+                        x2='252.6353' 
+                        y2='151.66455' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='213.71936' 
+                        cy='110.76489' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='2'/>
+<circle cx='214.9587' 
+                        cy='248.60764' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='true'
+                    data-zone='13-19.75'
+                    data-period='2'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='2'>
+<line x1='26.086266' 
+                        y1='119.94852' 
+                        x2='36.995358' 
+                        y2='130.8576' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='26.086266' 
+                        y1='130.8576' 
+                        x2='36.995358' 
+                        y2='119.94852' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='2'>
+<line x1='73.180046' 
+                        y1='250.47218' 
+                        x2='84.089134' 
+                        y2='261.3813' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='73.180046' 
+                        y1='261.3813' 
+                        x2='84.089134' 
+                        y2='250.47218' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='2'>
+<line x1='203.3076' 
+                        y1='127.26759' 
+                        x2='214.21669' 
+                        y2='138.17668' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='203.3076' 
+                        y1='138.17668' 
+                        x2='214.21669' 
+                        y2='127.26759' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='2'>
+<line x1='220.65794' 
+                        y1='118.72867' 
+                        x2='231.56703' 
+                        y2='129.63776' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='220.65794' 
+                        y1='129.63776' 
+                        x2='231.56703' 
+                        y2='118.72867' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='332.69315' 
+                        cy='124.18321' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='true'
+                    data-zone='6-13'
+                    data-period='2'/>
+<circle cx='202.56558' 
+                        cy='120.52367' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='2'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='2'>
+<line x1='80.615906' 
+                        y1='254.13173' 
+                        x2='91.524994' 
+                        y2='265.04083' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='80.615906' 
+                        y1='265.04083' 
+                        x2='91.524994' 
+                        y2='254.13173' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='274.44556' 
+                        cy='122.96336' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='2'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='2'>
+<line x1='277.6662' 
+                        y1='115.06912' 
+                        x2='288.57532' 
+                        y2='125.97821' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='277.6662' 
+                        y1='125.97821' 
+                        x2='288.57532' 
+                        y2='115.06912' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='95.98491' 
+                        cy='259.58627' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='true'
+                    data-zone='19.75+'
+                    data-period='2'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='2'>
+<line x1='70.701416' 
+                        y1='238.27373' 
+                        x2='81.610504' 
+                        y2='249.18282' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='70.701416' 
+                        y1='249.18282' 
+                        x2='81.610504' 
+                        y2='238.27373' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='6-13'
+                    data-period='2'>
+<line x1='172.32483' 
+                        y1='148.00499' 
+                        x2='183.23392' 
+                        y2='158.91408' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='172.32483' 
+                        y1='158.91408' 
+                        x2='183.23392' 
+                        y2='148.00499' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='273.20627' 
+                        cy='120.52367' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='2'/>
+<circle cx='88.54905' 
+                        cy='262.02594' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='true'
+                    data-zone='19.75+'
+                    data-period='2'/>
+<circle cx='198.2896' 
+                        cy='132.50687' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='3'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='3'>
+<line x1='206.46747' 
+                        y1='117.29355' 
+                        x2='217.37656' 
+                        y2='128.20264' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='206.46747' 
+                        y1='128.20264' 
+                        x2='217.37656' 
+                        y2='117.29355' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='6-13'
+                    data-period='3'>
+<line x1='308.09088' 
+                        y1='95.33629' 
+                        x2='319' 
+                        y2='106.24538' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='308.09088' 
+                        y1='106.24538' 
+                        x2='319' 
+                        y2='95.33629' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='6-13'
+                    data-period='3'>
+<line x1='335.3557' 
+                        y1='100.21567' 
+                        x2='346.26483' 
+                        y2='111.124756' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='335.3557' 
+                        y1='111.124756' 
+                        x2='346.26483' 
+                        y2='100.21567' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='3'>
+<line x1='231.25368' 
+                        y1='135.59123' 
+                        x2='242.16277' 
+                        y2='146.50032' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='231.25368' 
+                        y1='146.50032' 
+                        x2='242.16277' 
+                        y2='135.59123' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='296.19513' 
+                        cy='302.06564' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='true'
+                    data-zone='19.75+'
+                    data-period='3'/>
+<circle cx='281.32336' 
+                        cy='103.2305' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='3'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='3'>
+<line x1='295.69778' 
+                        y1='120.953094' 
+                        x2='306.6069' 
+                        y2='131.86218' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='295.69778' 
+                        y1='131.86218' 
+                        x2='306.6069' 
+                        y2='120.953094' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='3'>
+<line x1='247.3647' 
+                        y1='144.13017' 
+                        x2='258.2738' 
+                        y2='155.03926' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='247.3647' 
+                        y1='155.03926' 
+                        x2='258.2738' 
+                        y2='144.13017' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='3'>
+<line x1='16.853035' 
+                        y1='117.29355' 
+                        x2='27.762127' 
+                        y2='128.20264' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='16.853035' 
+                        y1='128.20264' 
+                        x2='27.762127' 
+                        y2='117.29355' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='3'>
+<line x1='318.00537' 
+                        y1='288.07214' 
+                        x2='328.9145' 
+                        y2='298.98126' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='318.00537' 
+                        y1='298.98126' 
+                        x2='328.9145' 
+                        y2='288.07214' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='223.0758' 
+                        cy='117.86868' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='3'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='6-13'
+                    data-period='3'>
+<line x1='159.3737' 
+                        y1='149.00955' 
+                        x2='170.28279' 
+                        y2='159.91864' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='159.3737' 
+                        y1='159.91864' 
+                        x2='170.28279' 
+                        y2='149.00955' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='213.16133' 
+                        cy='120.308395' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='4'/>
+<circle cx='224.31512' 
+                        cy='123.967926' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='4'/>
+<circle cx='267.69098' 
+                        cy='123.967926' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='4'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='4'>
+<line x1='30.485445' 
+                        y1='190.48436' 
+                        x2='41.394535' 
+                        y2='201.39345' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='30.485445' 
+                        y1='201.39345' 
+                        x2='41.394535' 
+                        y2='190.48436' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='0-6'
+                    data-period='4'>
+<line x1='201.51024' 
+                        y1='128.27216' 
+                        x2='212.41933' 
+                        y2='139.18124' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='201.51024' 
+                        y1='139.18124' 
+                        x2='212.41933' 
+                        y2='128.27216' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='6-13'
+                    data-period='4'>
+<line x1='300.65503' 
+                        y1='138.03094' 
+                        x2='311.56415' 
+                        y2='148.94003' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='300.65503' 
+                        y1='148.94003' 
+                        x2='311.56415' 
+                        y2='138.03094' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='247.86201' 
+                        cy='217.89618' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='true'
+                    data-zone='6-13'
+                    data-period='4'/>
+<circle cx='291.23785' 
+                        cy='109.32974' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='true'
+                    data-zone='0-6'
+                    data-period='4'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='6-13'
+                    data-period='4'>
+<line x1='305.61227' 
+                        y1='108.75461' 
+                        x2='316.5214' 
+                        y2='119.6637' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='305.61227' 
+                        y1='119.6637' 
+                        x2='316.5214' 
+                        y2='108.75461' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='4'>
+<line x1='115.99784' 
+                        y1='278.3134' 
+                        x2='126.90693' 
+                        y2='289.2225' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='115.99784' 
+                        y1='289.2225' 
+                        x2='126.90693' 
+                        y2='278.3134' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+<circle cx='28.504131' 
+                        cy='125.18776' 
+                        r='6' 
+                        fill='#00FF00' 
+                        opacity='0.7'
+                        class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='true'
+                    data-zone='19.75+'
+                    data-period='4'/>
+<g class='shot-marker' 
+                    data-game-id='4ab83ea3-625a-4982-a555-73ee072e1f92' 
+                    data-player-id='' 
+                    data-made='false'
+                    data-zone='19.75+'
+                    data-period='4'>
+<line x1='430.7826' 
+                        y1='230.73933' 
+                        x2='441.6917' 
+                        y2='241.64842' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+<line x1='430.7826' 
+                        y1='241.64842' 
+                        x2='441.6917' 
+                        y2='230.73933' 
+                        stroke='#FF0000' 
+                        stroke-width='3' 
+                        opacity='0.8'/>
+</g>
+</svg>
+
+</div>
+</div>
+</div>
+<h2>Lineup Analysis</h2>
+<table>
+<tr><th>Lineup</th><th>MIN</th><th>OFF POSS</th><th>DEF POSS</th><th>OFF RTG</th><th>DEF RTG</th><th>NET RTG</th><th>+/-</th><th>eFG%</th></tr>
+<tr><td>0 - Garvin, 1 - Grider, 4 - Harris, 5 - Walker, 10 - Mozee</td><td>04:30</td><td>15</td><td>15</td><td style='color: #8B0000'>80.0</td><td style='color: #006400'>26.7</td><td style='color: #006400'>53.3</td><td style='color: #006400'>8</td><td>50.0%</td></tr>
+<tr><td>1 - Grider, 4 - Harris, 11 - Wolf, 13 - Woods, 14 - City</td><td>04:00</td><td>11</td><td>12</td><td style='color: #8B0000'>0.0</td><td style='color: #006400'>66.7</td><td style='color: #8B0000'>-66.7</td><td style='color: #8B0000'>-8</td><td>0.0%</td></tr>
+<tr><td>0 - Garvin, 3 - Branch, 5 - Walker, 10 - Mozee, 13 - Woods</td><td>03:42</td><td>16</td><td>17</td><td style='color: #8B0000'>50.0</td><td style='color: #006400'>35.3</td><td style='color: #006400'>14.7</td><td style='color: #006400'>2</td><td>44.4%</td></tr>
+<tr><td>1 - Grider, 3 - Branch, 4 - Harris, 5 - Walker, 13 - Woods</td><td>03:05</td><td>9</td><td>9</td><td style='color: #006400'>133.3</td><td style='color: #006400'>33.3</td><td style='color: #006400'>100.0</td><td style='color: #006400'>9</td><td>83.3%</td></tr>
+<tr><td>0 - Garvin, 1 - Grider, 4 - Harris, 5 - Walker, 13 - Woods</td><td>02:34</td><td>9</td><td>10</td><td style='color: #8B0000'>44.4</td><td style='color: #006400'>50.0</td><td style='color: #8B0000'>-5.6</td><td style='color: #8B0000'>-1</td><td>28.6%</td></tr>
+<tr><td>1 - Grider, 3 - Branch, 10 - Mozee, 11 - Wolf, 13 - Woods</td><td>02:08</td><td>9</td><td>9</td><td style='color: #8B0000'>100.0</td><td style='color: #006400'>66.7</td><td style='color: #006400'>33.3</td><td style='color: #006400'>3</td><td>50.0%</td></tr>
+<tr><td>0 - Garvin, 2 - Dowd-Mattingly, 3 - Branch, 5 - Walker, 10 - Mozee</td><td>01:53</td><td>7</td><td>7</td><td style='color: #8B0000'>0.0</td><td style='color: #006400'>28.6</td><td style='color: #8B0000'>-28.6</td><td style='color: #8B0000'>-2</td><td>0.0%</td></tr>
+<tr><td>2 - Dowd-Mattingly, 4 - Harris, 10 - Mozee, 11 - Wolf, 14 - City</td><td>01:52</td><td>6</td><td>5</td><td style='color: #8B0000'>66.7</td><td style='color: #8B0000'>160.0</td><td style='color: #8B0000'>-93.3</td><td style='color: #8B0000'>-4</td><td>100.0%</td></tr>
+<tr><td>2 - Dowd-Mattingly, 3 - Branch, 11 - Wolf, 13 - Woods, 14 - City</td><td>01:46</td><td>6</td><td>6</td><td style='color: #8B0000'>0.0</td><td style='color: #006400'>83.3</td><td style='color: #8B0000'>-83.3</td><td style='color: #8B0000'>-5</td><td>0.0%</td></tr>
+<tr><td>1 - Grider, 3 - Branch, 4 - Harris, 11 - Wolf, 14 - City</td><td>01:38</td><td>8</td><td>8</td><td style='color: #8B0000'>87.5</td><td style='color: #006400'>25.0</td><td style='color: #006400'>62.5</td><td style='color: #006400'>5</td><td>70.0%</td></tr>
+<tr><td>1 - Grider, 3 - Branch, 5 - Walker, 10 - Mozee, 13 - Woods</td><td>01:25</td><td>4</td><td>4</td><td style='color: #8B0000'>75.0</td><td style='color: #006400'>0.0</td><td style='color: #006400'>75.0</td><td style='color: #006400'>3</td><td>50.0%</td></tr>
+<tr><td>0 - Garvin, 1 - Grider, 3 - Branch, 11 - Wolf, 13 - Woods</td><td>01:05</td><td>3</td><td>4</td><td style='color: #8B0000'>66.7</td><td style='color: #006400'>25.0</td><td style='color: #006400'>41.7</td><td style='color: #006400'>1</td><td>50.0%</td></tr>
+<tr><td>0 - Garvin, 1 - Grider, 3 - Branch, 5 - Walker, 10 - Mozee</td><td>00:54</td><td>3</td><td>3</td><td style='color: #8B0000'>66.7</td><td style='color: #006400'>66.7</td><td style='color: #8B0000'>0.0</td><td style='color: #8B0000'>0</td><td>0.0%</td></tr>
+<tr><td>0 - Garvin, 1 - Grider, 3 - Branch, 4 - Harris, 5 - Walker</td><td>00:39</td><td>4</td><td>4</td><td style='color: #8B0000'>0.0</td><td style='color: #006400'>25.0</td><td style='color: #8B0000'>-25.0</td><td style='color: #8B0000'>-1</td><td>0.0%</td></tr>
+<tr><td>0 - Garvin, 1 - Grider, 3 - Branch, 5 - Walker, 13 - Woods</td><td>00:37</td><td>3</td><td>2</td><td style='color: #8B0000'>0.0</td><td style='color: #8B0000'>150.0</td><td style='color: #8B0000'>-150.0</td><td style='color: #8B0000'>-3</td><td>0.0%</td></tr>
+<tr><td>0 - Garvin, 1 - Grider, 3 - Branch, 4 - Harris, 14 - City</td><td>00:04</td><td>1</td><td>1</td><td style='color: #8B0000'>0.0</td><td style='color: #006400'>0.0</td><td style='color: #8B0000'>0.0</td><td style='color: #8B0000'>0</td><td>0.0%</td></tr>
+</table>
+<script>updateShotStats();</script>
+<div style='margin-top: 20px; font-size: 0.9em;'>
+<h3>Advanced Statistics Glossary</h3>
+<ul>
+<li><strong>AST/TO</strong> - Assist to Turnover Ratio</li>
+<li><strong>AST%</strong> - Percentage of teammate field goals the player assisted while on court</li>
+<li><strong>REB%</strong> - Percentage of available rebounds the player grabbed while on court</li>
+<li><strong>TOV%</strong> - Percentage of Turnovers by a player against all player actions</li>
+<li><strong>PIE</strong> - Player Impact Estimate: A measure of a player's overall statistical contribution</li>
+<li><strong>eFG%</strong> - Effective Field Goal Percentage: Adjusts for 3-pointers being worth more</li>
+<li><strong>TS%</strong> - True Shooting Percentage: Accounts for 2-pointers, 3-pointers, and free throws</li>
+<li><strong>OFFRTG</strong> - Points scored per 100 possessions while player was on court</li>
+<li><strong>DEFRTG</strong> - Points allowed per 100 possessions while player was on court</li>
+<li><strong>NETRTG</strong> - Difference between offensive and defensive rating</li>
+</ul>
+</div>
+<p class='footnote'>*All possession-based statistics are estimates based on recorded statistical events</p>
+<p class='footnote'>*All player minutes are estimates based on real time entries of tip off, period start/end, and substitution entries</p>
+<div id='debug-output' style='margin-top: 20px; padding: 10px; background-color: #f8f8f8; border: 1px solid #ddd; display: none;'>
+<h3>Debugging Information</h3>
+<button onclick="toggleDebug()">Toggle Debug Info</button>
+<div id='debug-content'></div>
+</div>
+</body></html>
