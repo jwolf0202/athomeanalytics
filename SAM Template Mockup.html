@@ -1,0 +1,2904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Alignment Workflow</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #B73A3A;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .upload-section {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #B73A3A;
+        }
+
+        .upload-section h2 {
+            color: #B73A3A;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+        }
+
+        .file-upload {
+            border: 2px dashed #B73A3A;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        .file-upload:hover {
+            background: #f0f0f0;
+            border-color: #932d2d;
+        }
+
+        .file-upload.dragover {
+            background: #f9f9f9;
+            border-color: #B73A3A;
+            transform: scale(1.02);
+        }
+
+        .file-upload input {
+            display: none;
+        }
+
+        .file-upload-text {
+            color: #B73A3A;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .file-upload-subtext {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .upload-status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .upload-status.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .upload-status.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .personas-section {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #B73A3A;
+        }
+
+        .personas-section h2 {
+            color: #B73A3A;
+            margin-bottom: 30px;
+            font-size: 1.4em;
+            text-align: center;
+        }
+
+        .personas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .persona-card {
+            background: #fafafa;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .persona-card:hover {
+            border-left-color: #B73A3A;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .persona-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .persona-card h3 {
+            color: #B73A3A;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .persona-card p {
+            color: #666;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .persona-card .capabilities {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .persona-card .capabilities ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .persona-card .capabilities li {
+            color: #555;
+            font-size: 0.85em;
+            margin-bottom: 5px;
+            padding-left: 15px;
+            position: relative;
+        }
+
+        .persona-card .capabilities li:before {
+            content: "→";
+            color: #B73A3A;
+            position: absolute;
+            left: 0;
+        }
+
+        .btn {
+            background: #B73A3A;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #932d2d;
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .page-header {
+            background: white;
+            border-radius: 8px;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #B73A3A;
+        }
+
+        .page-header.hidden {
+            display: none;
+        }
+
+        .page-header h1 {
+            color: #B73A3A;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-group label {
+            font-size: 0.9em;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .control-group select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.95em;
+        }
+
+        .back-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .back-btn:hover {
+            background: #545b62;
+        }
+
+        .timeline-tabs {
+            display: none;
+            margin-bottom: 30px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .tab-button {
+            flex: 1;
+            background: white;
+            border: none;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-button:hover {
+            background: #f8f9fa;
+        }
+
+        .tab-button.active {
+            background: #B73A3A;
+            color: white;
+            border-bottom-color: #932d2d;
+        }
+
+        .programs-table-container {
+            display: none;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .table-stats {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #B73A3A;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .programs-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .programs-table th {
+            background: #f8f9fa;
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 0.9em;
+        }
+
+        .programs-table td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 0.9em;
+        }
+
+        .programs-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .tag-checkbox {
+            margin-right: 10px;
+        }
+
+        .tag-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        .tag-status.tagged {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .tag-status.not-tagged {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .expanded-row {
+            display: none;
+        }
+
+        .expanded-content {
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .program-details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .detail-item {
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 3px solid #B73A3A;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #666;
+            font-size: 0.85em;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .detail-value {
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        .notes-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .notes-section h4 {
+            color: #B73A3A;
+            margin-bottom: 15px;
+        }
+
+        .note-item {
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            border-left: 3px solid #6c757d;
+        }
+
+        .note-header {
+            font-weight: 600;
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+
+        .note-content textarea {
+            width: 100%;
+            min-height: 80px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: inherit;
+            font-size: 0.9em;
+            resize: vertical;
+        }
+
+        .goal-disaggregation-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #B73A3A;
+        }
+
+        .goal-disaggregation-section h4 {
+            color: #B73A3A;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .goal-level {
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+
+        .goal-level h5 {
+            color: #666;
+            margin-bottom: 10px;
+            font-size: 1em;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .goal-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .goal-item:last-child {
+            border-bottom: none;
+        }
+
+        .goal-label {
+            font-weight: 500;
+            color: #555;
+        }
+
+        .goal-value {
+            font-weight: 600;
+            color: #B73A3A;
+            font-size: 1.1em;
+        }
+
+        .unit-goal-section {
+            grid-column: span 2;
+            background: #fff3cd;
+            border-left-color: #B73A3A;
+        }
+
+        .note-item.editable {
+            border-left-color: #28a745;
+        }
+
+        .note-item.readonly {
+            border-left-color: #6c757d;
+            background: #f8f9fa;
+        }
+
+        .commits-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #e8f4fd;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+
+        .commits-section h4 {
+            color: #007bff;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .commit-item {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 1px solid #dee2e6;
+        }
+
+        .commit-header {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 0.95em;
+        }
+
+        .commit-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .commit-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .commit-input-group label {
+            font-size: 0.85em;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .commit-current {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .commit-current label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .commit-history {
+            padding-top: 15px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .commit-history h5 {
+            color: #666;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .history-value {
+            color: #007bff;
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+
+        .commit-aggregation-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #e8f4fd;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+
+        .commit-aggregation-section h4 {
+            color: #007bff;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .commit-table-container {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            overflow-x: auto;
+            margin-bottom: 15px;
+        }
+
+        .commit-table-container h5 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1em;
+            font-weight: 600;
+        }
+
+        .commit-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+
+        .commit-table th {
+            background: #f8f9fa;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: 600;
+            border: 1px solid #dee2e6;
+            font-size: 0.85em;
+        }
+
+        .commit-table td {
+            padding: 10px 8px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+
+        .commit-table .current-period {
+            background: #fff3cd;
+            font-weight: 600;
+            color: #856404;
+        }
+
+        .commit-table .historical-period {
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+
+        .commit-table .entity-name {
+            text-align: left;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .commit-table .positive-variance {
+            color: #28a745;
+            font-weight: 500;
+        }
+
+        .commit-table .negative-variance {
+            color: #dc3545;
+            font-weight: 500;
+        }
+
+        .commit-table .total-row {
+            border-top: 2px solid #dee2e6;
+            background: #f8f9fa;
+        }
+
+        .commit-table .total-row td {
+            font-weight: 600;
+            padding: 12px 8px;
+        }
+
+        .programs-filters {
+            background: white;
+            border-radius: 8px;
+            padding: 20px 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #6c757d;
+        }
+
+        .filters-container {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            font-size: 0.9em;
+            color: #666;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .filter-group select {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.95em;
+            background: white;
+            min-width: 200px;
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: #B73A3A;
+            box-shadow: 0 0 0 2px rgba(183, 58, 58, 0.2);
+        }
+
+        .no-results-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+            font-style: italic;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px dashed #dee2e6;
+            margin: 20px;
+        }
+
+        .no-results-message h3 {
+            color: #B73A3A;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .personas-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .tab-buttons {
+                flex-direction: column;
+            }
+            
+            .programs-table {
+                font-size: 0.8em;
+            }
+            
+            .program-details-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .commit-table-container {
+                overflow-x: scroll;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Landing Page -->
+        <div id="landingPage">
+            <div class="header">
+                <h1>Sales Alignment Workflow</h1>
+                <p>Manage sales leadership commits for programs throughout 90/60/30-day periods</p>
+            </div>
+
+            <div class="upload-section">
+                <h2>Upload Program Data</h2>
+                <div class="file-upload" onclick="document.getElementById('fileInput').click()">
+                    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(event)">
+                    <div class="file-upload-text">Click to upload or drag and drop</div>
+                    <div class="file-upload-subtext">Excel (.xlsx, .xls) or CSV files supported</div>
+                </div>
+                <div id="uploadStatus" class="upload-status"></div>
+            </div>
+
+            <div class="personas-section">
+                <h2>Select Your Persona</h2>
+                <div class="personas-grid">
+                    <div class="persona-card disabled" data-persona="corporate">
+                        <h3>Corporate</h3>
+                        <p>Manage national programs and set corporate-level goals and notes.</p>
+                        <div class="capabilities">
+                            <ul>
+                                <li>Tag national programs for state commitment</li>
+                                <li>Add corporate notes</li>
+                                <li>Set unit goals for tagged programs</li>
+                                <li>View goal disaggregation</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="persona-card disabled" data-persona="region">
+                        <h3>Region</h3>
+                        <p>Review corporate-tagged programs and manage regional oversight.</p>
+                        <div class="capabilities">
+                            <ul>
+                                <li>Review corporate-tagged programs</li>
+                                <li>Add regional notes</li>
+                                <li>Tag additional regional programs</li>
+                                <li>View regional goal breakdowns</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="persona-card disabled" data-persona="state-trade-dev">
+                        <h3>State Trade Dev</h3>
+                        <p>Add details to national programs and create state-specific programs.</p>
+                        <div class="capabilities">
+                            <ul>
+                                <li>Add details to national programs</li>
+                                <li>Create new state-specific programs</li>
+                                <li>Add trade development notes</li>
+                                <li>View state goal allocations</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="persona-card disabled" data-persona="state-comm-ops">
+                        <h3>State Comm Ops</h3>
+                        <p>Tag programs at state level and add commercial operations insights.</p>
+                        <div class="capabilities">
+                            <ul>
+                                <li>Tag programs at state level</li>
+                                <li>Add commercial operations notes</li>
+                                <li>Review higher-level program notes</li>
+                                <li>Monitor state program portfolio</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="persona-card disabled" data-persona="state-sales">
+                        <h3>State Sales</h3>
+                        <p>Enter commits and sales notes for tagged programs by leadership role.</p>
+                        <div class="capabilities">
+                            <ul>
+                                <li>Enter sales commits by leader role</li>
+                                <li>Add sales-specific notes</li>
+                                <li>View only tagged programs</li>
+                                <li>Track commit history</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Persona Pages -->
+        <div id="personaPage" style="display: none;">
+            <div class="page-header">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                    <div>
+                        <button class="back-btn" onclick="goBack()">← Back to Home</button>
+                        <h1 id="pageTitle" style="margin: 10px 0;">Corporate View</h1>
+                    </div>
+                    <button class="btn" onclick="saveData()">Save</button>
+                </div>
+                <div class="header-controls">
+                    <div class="control-group">
+                        <label>Base Month</label>
+                        <select id="monthSelect">
+                            <option value="0">January</option>
+                            <option value="1">February</option>
+                            <option value="2">March</option>
+                            <option value="3">April</option>
+                            <option value="4">May</option>
+                            <option value="5">June</option>
+                            <option value="6">July</option>
+                            <option value="7">August</option>
+                            <option value="8">September</option>
+                            <option value="9">October</option>
+                            <option value="10">November</option>
+                            <option value="11">December</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Year</label>
+                        <select id="yearSelect">
+                            <option value="2024">2024</option>
+                            <option value="2025">2025</option>
+                            <option value="2026">2026</option>
+                            <option value="2027">2027</option>
+                        </select>
+                    </div>
+                    <div class="control-group" id="regionSelectGroup" style="display: none;">
+                        <label>Region</label>
+                        <select id="regionSelect">
+                            <option value="">Select Region</option>
+                            <option value="Central">Central</option>
+                            <option value="Eastern">Eastern</option>
+                            <option value="Western">Western</option>
+                        </select>
+                    </div>
+                    <div class="control-group" id="stateSelectGroup" style="display: none;">
+                        <label>State</label>
+                        <select id="stateSelect">
+                            <option value="">Select State</option>
+                        </select>
+                    </div>
+                    <div class="control-group" id="leaderSelectGroup" style="display: none;">
+                        <label>Sales Leader</label>
+                        <select id="leaderSelect">
+                            <option value="">Select Leader Role</option>
+                            <option value="On Premise">On Premise</option>
+                            <option value="Off-Indy">Off-Indy</option>
+                            <option value="Off-Chains">Off-Chains</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timeline-tabs">
+                <div class="tab-buttons">
+                    <button class="tab-button active" data-timeline="90" onclick="switchTimeline(90)">90 Days Out</button>
+                    <button class="tab-button" data-timeline="60" onclick="switchTimeline(60)">60 Days Out</button>
+                    <button class="tab-button" data-timeline="30" onclick="switchTimeline(30)">30 Days Out</button>
+                </div>
+            </div>
+
+            <div class="programs-filters" style="display: none;">
+                <div class="filters-container">
+                    <div class="filter-group">
+                        <label for="programClassFilter">Program Class:</label>
+                        <select id="programClassFilter" onchange="applyFilters()">
+                            <option value="all">All Program Classes</option>
+                            <option value="Supplier Initiative">Supplier Initiative</option>
+                            <option value="Incremental Growth Opportunity">Incremental Growth Opportunity</option>
+                            <option value="LOCAL PROGRAM" class="local-program-option" style="display: none;">LOCAL PROGRAM</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="taggedStatusFilter">Tagged Status:</label>
+                        <select id="taggedStatusFilter" onchange="applyFilters()">
+                            <option value="all">All Programs</option>
+                            <option value="tagged">Tagged Only</option>
+                            <option value="untagged">Untagged Only</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" id="createProgramGroup" style="display: none;">
+                        <button class="btn" id="createProgramBtn" onclick="openCreateProgramModal()">Create New Program</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="programs-table-container">
+                <div class="table-stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalPrograms">0</div>
+                        <div class="stat-label">Total Programs</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="taggedPrograms">0</div>
+                        <div class="stat-label">Tagged Programs</div>
+                    </div>
+                </div>
+                
+                <table class="programs-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Supplier</th>
+                            <th>Program Name</th>
+                            <th>Goal Type</th>
+                            <th>Product Sub Group</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Goal</th>
+                            <th>Tagged Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="programsTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Create Program Modal -->
+        <div id="createProgramModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Create New Program</h2>
+                    <span class="modal-close" onclick="closeCreateProgramModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="createProgramForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="newProgramName">Program Name *</label>
+                                <input type="text" id="newProgramName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newProgramClass">Program Class *</label>
+                                <select id="newProgramClass" required>
+                                    <option value="">Select Program Class</option>
+                                    <option value="LOCAL PROGRAM">LOCAL PROGRAM</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="newGoalType">Goal Type *</label>
+                                <input type="text" id="newGoalType" required placeholder="e.g., Volume, Revenue">
+                            </div>
+                            <div class="form-group">
+                                <label for="newUnitGoal">Unit Goal *</label>
+                                <input type="number" id="newUnitGoal" required min="1" placeholder="Enter unit goal">
+                            </div>
+                            <div class="form-group">
+                                <label for="newStartDate">Start Date *</label>
+                                <input type="date" id="newStartDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newEndDate">End Date *</label>
+                                <input type="date" id="newEndDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newSupplier">Supplier</label>
+                                <input type="text" id="newSupplier" placeholder="Optional">
+                            </div>
+                            <div class="form-group">
+                                <label for="newProductSubGroup">Product Sub Group</label>
+                                <input type="text" id="newProductSubGroup" placeholder="Optional">
+                            </div>
+                            <div class="form-group">
+                                <label for="newPremiseFocus">Premise Focus</label>
+                                <input type="text" id="newPremiseFocus" placeholder="Optional">
+                            </div>
+                            <div class="form-group">
+                                <label for="newGoal">Program Goal</label>
+                                <input type="text" id="newGoal" placeholder="Optional description">
+                            </div>
+                            <div class="form-group form-group-full">
+                                <label for="newNeedToKnows">Need to Knows</label>
+                                <textarea id="newNeedToKnows" rows="3" placeholder="Optional additional information"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateProgramModal()">Cancel</button>
+                    <button type="button" class="btn" onclick="createNewProgram()">Create Program</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables to store application data
+        let programsData = {};
+        let workflowData = {
+            tags: {},
+            notes: {},
+            commits: {},
+            unitGoals: {},
+            goalLevels: {} // Track what level set the goal (corporate, regional, state)
+        };
+        let currentPersona = '';
+        let currentTimeline = 90;
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        let currentRegion = '';
+        let currentState = '';
+        let currentLeader = '';
+
+        // Regional and state mappings based on requirements
+        const regionalBreakdown = {
+            'Central': 0.36,
+            'Western': 0.30,
+            'Eastern': 0.34
+        };
+
+        const statesByRegion = {
+            'Eastern': {
+                'FL': 0.5264, 'NY': 0.2593, 'SC': 0.0664, 'KY': 0.0490,
+                'MD': 0.0369, 'OH': 0.0327, 'DE': 0.0176, 'DC': 0.0117
+            },
+            'Central': {
+                'TX': 0.3744, 'IL': 0.1252, 'MO': 0.0992, 'LA': 0.0827, 'IN': 0.0804,
+                'CO': 0.0590, 'OK': 0.0472, 'AR': 0.0331, 'MN': 0.0292, 'KS': 0.0241,
+                'NE': 0.0229, 'TN': 0.0088, 'IA': 0.0057, 'SD': 0.0042, 'ND': 0.0039
+            },
+            'Western': {
+                'CA': 0.5585, 'NV': 0.1431, 'WA': 0.1065, 'AZ': 0.0904,
+                'HI': 0.0337, 'NM': 0.0244, 'OR': 0.0226, 'AK': 0.0186, 'ID': 0.0023
+            }
+        };
+
+        const salesChannelBreakdown = {
+            'On Premise': 0.15,
+            'Off-Indy': 0.40,
+            'Off-Chains': 0.45
+        };
+
+        // Helper function to get current unit goal for the current program context
+        function getCurrentUnitGoal() {
+            const expandedRows = document.querySelectorAll('.expanded-row[style*="table-row"]');
+            if (expandedRows.length > 0) {
+                const programId = expandedRows[0].id.replace('expanded-', '');
+                return workflowData.unitGoals[programId] || 0;
+            }
+            return 0;
+        }
+
+        // Helper function to get the base goal for the current persona's context
+        function getBaseGoalForPersona(unitGoal) {
+            if (currentPersona === 'corporate') {
+                return unitGoal; // Corporate sees the full unit goal
+            } else if (currentPersona === 'region' && currentRegion) {
+                // Regional view shows their portion of the unit goal
+                return Math.round(unitGoal * regionalBreakdown[currentRegion]);
+            } else if (currentPersona.startsWith('state-') && currentState) {
+                // State views show their portion of the unit goal
+                return calculateStateGoal(unitGoal, currentState);
+            }
+            return unitGoal;
+        }
+
+        // Helper function to format variance with proper sign
+        function formatVariance(variance) {
+            const sign = variance >= 0 ? '+' : '';
+            return `${sign}${formatNumber(variance)}`;
+        }
+
+        function aggregateCommitsByRegion(commits) {
+            const regionAggregates = {};
+            
+            Object.keys(regionalBreakdown).forEach(region => {
+                regionAggregates[region] = {};
+            });
+            
+            Object.keys(commits).forEach(commitKey => {
+                const parts = commitKey.split('_');
+                if (parts.length >= 2) {
+                    const state = parts[0];
+                    const region = findRegionForState(state);
+                    
+                    if (region && regionAggregates[region]) {
+                        const leaderCommits = commits[commitKey];
+                        Object.keys(leaderCommits).forEach(period => {
+                            if (!regionAggregates[region][period]) {
+                                regionAggregates[region][period] = 0;
+                            }
+                            regionAggregates[region][period] += leaderCommits[period] || 0;
+                        });
+                    }
+                }
+            });
+            
+            return regionAggregates;
+        }
+
+        function aggregateCommitsByState(commits, region) {
+            const stateAggregates = {};
+            
+            if (!region || !statesByRegion[region]) return stateAggregates;
+            
+            Object.keys(statesByRegion[region]).forEach(state => {
+                stateAggregates[state] = {};
+            });
+            
+            Object.keys(commits).forEach(commitKey => {
+                const parts = commitKey.split('_');
+                if (parts.length >= 2) {
+                    const state = parts[0];
+                    
+                    if (statesByRegion[region][state]) {
+                        const leaderCommits = commits[commitKey];
+                        Object.keys(leaderCommits).forEach(period => {
+                            if (!stateAggregates[state][period]) {
+                                stateAggregates[state][period] = 0;
+                            }
+                            stateAggregates[state][period] += leaderCommits[period] || 0;
+                        });
+                    }
+                }
+            });
+            
+            return stateAggregates;
+        }
+
+        function getStateLeaderCommits(commits, state) {
+            const leaderCommits = {};
+            
+            Object.keys(commits).forEach(commitKey => {
+                if (commitKey.startsWith(state + '_')) {
+                    leaderCommits[commitKey] = commits[commitKey];
+                }
+            });
+            
+            return leaderCommits;
+        }
+
+        function generateCommitAggregationSection(programId, unitGoal) {
+            const commits = workflowData.commits[programId] || {};
+            
+            if (Object.keys(commits).length === 0) {
+                return `
+                    <div class="commit-aggregation-section">
+                        <h4>Sales Commits Overview</h4>
+                        <div class="no-commits-message">
+                            No commits have been entered for this program yet.
+                        </div>
+                    </div>
+                `;
+            }
+            
+            let sectionHtml = `
+                <div class="commit-aggregation-section">
+                    <h4>Sales Commits Overview</h4>
+            `;
+            
+            if (currentPersona === 'corporate') {
+                sectionHtml += generateCorporateCommitView(commits, unitGoal);
+            } else if (currentPersona === 'region' && currentRegion) {
+                sectionHtml += generateRegionalCommitView(commits, unitGoal);
+            } else if (currentPersona.startsWith('state-') && currentPersona !== 'state-sales' && currentState) {
+                sectionHtml += generateStateCommitView(commits, unitGoal);
+            }
+            
+            sectionHtml += '</div>';
+            return sectionHtml;
+        }
+
+        function generateCorporateCommitView(commits, unitGoal) {
+            const regionAggregates = aggregateCommitsByRegion(commits);
+            const timePeriods = ['90', '60', '30'];
+            const programId = getCurrentProgramId();
+            const goalLevel = workflowData.goalLevels[programId] || 'corporate';
+            
+            // Calculate regional goal allocations based on goal level
+            const regionalGoals = {};
+            if (goalLevel === 'corporate') {
+                // Goal was set at corporate level, distribute to regions
+                Object.keys(regionalBreakdown).forEach(region => {
+                    regionalGoals[region] = Math.round(unitGoal * regionalBreakdown[region]);
+                });
+            } else {
+                // Goal was set at lower level, calculate based on actual regional goals
+                Object.keys(regionalBreakdown).forEach(region => {
+                    if (goalLevel === 'regional' && region === currentRegion) {
+                        regionalGoals[region] = unitGoal; // This region set the goal
+                    } else {
+                        regionalGoals[region] = 0; // Other regions don't have goals set
+                    }
+                });
+            }
+            
+            // Calculate totals for each period
+            const totalsByPeriod = {};
+            const totalGoal = Object.values(regionalGoals).reduce((sum, goal) => sum + goal, 0);
+            timePeriods.forEach(period => {
+                totalsByPeriod[period] = 0;
+                Object.keys(regionAggregates).forEach(region => {
+                    totalsByPeriod[period] += regionAggregates[region][period] || 0;
+                });
+            });
+            
+            return `
+                <div class="commit-table-container">
+                    <h5>Regional Commit Totals vs Goals</h5>
+                    <table class="commit-table">
+                        <thead>
+                            <tr>
+                                <th class="entity-name">Region</th>
+                                ${timePeriods.map(period => `
+                                    <th class="${period == currentTimeline ? 'current-period' : 'historical-period'}">Goal</th>
+                                    <th class="${period == currentTimeline ? 'current-period' : 'historical-period'}">
+                                        ${period} Days ${period == currentTimeline ? '(Current)' : ''}
+                                    </th>
+                                    <th class="${period == currentTimeline ? 'current-period' : 'historical-period'}">Variance</th>
+                                `).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Object.keys(regionalBreakdown).map(region => {
+                                const regionCommits = regionAggregates[region] || {};
+                                const regionGoal = regionalGoals[region];
+                                return `
+                                    <tr>
+                                        <td class="entity-name">${region}</td>
+                                        ${timePeriods.map(period => {
+                                            const commits = regionCommits[period] || 0;
+                                            const variance = commits - regionGoal;
+                                            return `
+                                                <td class="${period == currentTimeline ? 'current-period' : 'historical-period'}">
+                                                    ${formatNumber(regionGoal)}
+                                                </td>
+                                                <td class="${period == currentTimeline ? 'current-period' : 'historical-period'}">
+                                                    ${commits > 0 ? formatNumber(commits) : '-'}
+                                                </td>
+                                                <td class="${period == currentTimeline ? 'current-period' : 'historical-period'} ${variance >= 0 ? 'positive-variance' : 'negative-variance'}">
+                                                    ${commits > 0 ? formatVariance(variance) : '-'}
+                                                </td>
+                                            `;
+                                        }).join('')}
+                                    </tr>
+                                `;
+                            }).join('')}
+                            <tr class="total-row">
+                                <td class="entity-name"><strong>TOTAL</strong></td>
+                                ${timePeriods.map(period => {
+                                    const totalCommits = totalsByPeriod[period];
+                                    const totalVariance = totalCommits - totalGoal;
+                                    return `
+                                        <td class="${period == currentTimeline ? 'current-period' : 'historical-period'}">
+                                            <strong>${formatNumber(totalGoal)}</strong>
+                                        </td>
+                                        <td class="${period == currentTimeline ? 'current-period' : 'historical-period'}">
+                                            <strong>${totalCommits > 0 ? formatNumber(totalCommits) : '-'}</strong>
+                                        </td>
+                                        <td class="${period == currentTimeline ? 'current-period' : 'historical-period'} ${totalVariance >= 0 ? 'positive-variance' : 'negative-variance'}">
+                                            <strong>${totalCommits > 0 ? formatVariance(totalVariance) : '-'}</strong>
+                                        </td>
+                                    `;
+                                }).join('')}
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function generateRegionalCommitView(commits, unitGoal) {
+            const stateAggregates = aggregateCommitsByState(commits, currentRegion);
+            const timePeriods = ['90', '60', '30'];
+            const programId = getCurrentProgramId();
+            const goalLevel = workflowData.goalLevels[programId] || 'corporate';
+            
+            // Use the same logic as goal disaggregation
+            let baseGoal;
+            if (goalLevel === 'regional') {
+                baseGoal = unitGoal; // Use the goal as set by the region
+            } else {
+                baseGoal = getBaseGoalForPersona(unitGoal); // Calculate regional portion
+            }
+            
+            // Calculate state goal allocations within this region
+            const stateGoals = {};
+            Object.keys(statesByRegion[currentRegion] || {}).forEach(state => {
+                stateGoals[state] = Math.round(baseGoal * statesByRegion[currentRegion][state]);
+            });
+            
+            // Calculate totals for each period
+            const totalsByPeriod = {};
+            const totalGoal = baseGoal;
+            timePeriods.forEach(period => {
+                totalsByPeriod[period] = 0;
+                Object.keys(stateAggregates).forEach(state => {
+                    totalsByPeriod[period] += stateAggregates[state][period] || 0;
+                });
+            });
+            
+            return `
+                <div class="commit-table-container">
+                    <h5>${currentRegion} Region - State Commit Totals vs Goals</h5>
+                    <table class="commit-table">
+                        <thead>
+                            <tr>
+                                <th class="entity-name">State</th>
+                                ${timePeriods.map(period => `
+                                    <th class="${period == currentTimeline ? 'current-period' : 'historical-period'}">Goal</th>
+                                    <th class="${period == currentTimeline ? 'current-period' : 'historical-period'}">
+                                        ${period} Days ${period == currentTimeline ? '(Current)' : ''}
+                                    </th>
+                                    <th class="${period == currentTimeline ? 'current-period' : 'historical-period'}">Variance</th>
+                                `).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Object.keys(statesByRegion[currentRegion] || {}).map(state => {
+                                const stateCommits = stateAggregates[state] || {};
+                                const stateGoal = stateGoals[state];
+                                return `
+                                    <tr>
+                                        <td class="entity-name">${state}</td>
+                                        ${timePeriods.map(period => {
+                                            const commits = stateCommits[period] || 0;
+                                            const variance = commits - stateGoal;
+                                            return `
+                                                <td class="${period == currentTimeline ? 'current-period' : 'historical-period'}">
+                                                    ${formatNumber(stateGoal)}
+                                                </td>
+                                                <td class="${period == currentTimeline ? 'current-period' : 'historical-period'}">
+                                                    ${commits > 0 ? formatNumber(commits) : '-'}
+                                                </td>
+                                                <td class="${period == currentTimeline ? 'current-period' : 'historical-period'} ${variance >= 0 ? 'positive-variance' : 'negative-variance'}">
+                                                    ${commits > 0 ? formatVariance(variance) : '-'}
+                                                </td>
+                                            `;
+                                        }).join('')}
+                                    </tr>
+                                `;
+                            }).join('')}
+                            <tr class="total-row">
+                                <td class="entity-name"><strong>TOTAL</strong></td>
+                                ${timePeriods.map(period => {
+                                    const totalCommits = totalsByPeriod[period];
+                                    const totalVariance = totalCommits - totalGoal;
+                                    return `
+                                        <td class="${period == currentTimeline ? 'current-period' : 'historical-period'}">
+                                            <strong>${formatNumber(totalGoal)}</strong>
+                                        </td>
+                                        <td class="${period == currentTimeline ? 'current-period' : 'historical-period'}">
+                                            <strong>${totalCommits > 0 ? formatNumber(totalCommits) : '-'}</strong>
+                                        </td>
+                                        <td class="${period == currentTimeline ? 'current-period' : 'historical-period'} ${totalVariance >= 0 ? 'positive-variance' : 'negative-variance'}">
+                                            <strong>${totalCommits > 0 ? formatVariance(totalVariance) : '-'}</strong>
+                                        </td>
+                                    `;
+                                }).join('')}
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function generateStateCommitView(commits, unitGoal) {
+            const leaderCommits = getStateLeaderCommits(commits, currentState);
+            const timePeriods = ['90', '60', '30'];
+            const salesChannels = ['On Premise', 'Off-Indy', 'Off-Chains'];
+            const programId = getCurrentProgramId();
+            const goalLevel = workflowData.goalLevels[programId] || 'corporate';
+            
+            // Calculate sales leader goal allocations within this state based on goal level
+            const leaderGoals = {};
+            let stateGoal = 0;
+            
+            if (goalLevel === 'corporate') {
+                // Goal was set at corporate level, calculate state portion then distribute to leaders
+                stateGoal = calculateStateGoal(unitGoal, currentState);
+            } else if (goalLevel === 'regional') {
+                // Goal was set at regional level, calculate state portion then distribute to leaders
+                const region = findRegionForState(currentState);
+                if (region === currentRegion) {
+                    stateGoal = Math.round(unitGoal * statesByRegion[region][currentState]);
+                }
+            } else if (goalLevel === 'state') {
+                // Goal was set at state level, use directly
+                stateGoal = unitGoal;
+            }
+            
+            // Calculate sales channel goals from state goal
+            salesChannels.forEach(channel => {
+                leaderGoals[channel] = Math.round(stateGoal * salesChannelBreakdown[channel]);
+            });
+            
+            // Calculate totals for each period
+            const totalsByPeriod = {};
+            const totalGoal = stateGoal;
+            timePeriods.forEach(period => {
+                totalsByPeriod[period] = 0;
+                salesChannels.forEach(channel => {
+                    const channelKey = currentState + '_' + channel.replace(/[^a-zA-Z0-9]/g, '');
+                    const channelCommits = leaderCommits[channelKey] || {};
+                    totalsByPeriod[period] += channelCommits[period] || 0;
+                });
+            });
+            
+            return `
+                <div class="commit-table-container">
+                    <h5>${currentState} State - Sales Leader Commits vs Goals</h5>
+                    <table class="commit-table">
+                        <thead>
+                            <tr>
+                                <th class="entity-name">Sales Leader</th>
+                                ${timePeriods.map(period => `
+                                    <th class="${period == currentTimeline ? 'current-period' : 'historical-period'}">Goal</th>
+                                    <th class="${period == currentTimeline ? 'current-period' : 'historical-period'}">
+                                        ${period} Days ${period == currentTimeline ? '(Current)' : ''}
+                                    </th>
+                                    <th class="${period == currentTimeline ? 'current-period' : 'historical-period'}">Variance</th>
+                                `).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${salesChannels.map(channel => {
+                                const channelKey = currentState + '_' + channel.replace(/[^a-zA-Z0-9]/g, '');
+                                const channelCommits = leaderCommits[channelKey] || {};
+                                const channelGoal = leaderGoals[channel];
+                                return `
+                                    <tr>
+                                        <td class="entity-name">${channel}</td>
+                                        ${timePeriods.map(period => {
+                                            const commits = channelCommits[period] || 0;
+                                            const variance = commits - channelGoal;
+                                            return `
+                                                <td class="${period == currentTimeline ? 'current-period' : 'historical-period'}">
+                                                    ${formatNumber(channelGoal)}
+                                                </td>
+                                                <td class="${period == currentTimeline ? 'current-period' : 'historical-period'}">
+                                                    ${commits > 0 ? formatNumber(commits) : '-'}
+                                                </td>
+                                                <td class="${period == currentTimeline ? 'current-period' : 'historical-period'} ${variance >= 0 ? 'positive-variance' : 'negative-variance'}">
+                                                    ${commits > 0 ? formatVariance(variance) : '-'}
+                                                </td>
+                                            `;
+                                        }).join('')}
+                                    </tr>
+                                `;
+                            }).join('')}
+                            <tr class="total-row">
+                                <td class="entity-name"><strong>TOTAL</strong></td>
+                                ${timePeriods.map(period => {
+                                    const totalCommits = totalsByPeriod[period];
+                                    const totalVariance = totalCommits - totalGoal;
+                                    return `
+                                        <td class="${period == currentTimeline ? 'current-period' : 'historical-period'}">
+                                            <strong>${formatNumber(totalGoal)}</strong>
+                                        </td>
+                                        <td class="${period == currentTimeline ? 'current-period' : 'historical-period'}">
+                                            <strong>${totalCommits > 0 ? formatNumber(totalCommits) : '-'}</strong>
+                                        </td>
+                                        <td class="${period == currentTimeline ? 'current-period' : 'historical-period'} ${totalVariance >= 0 ? 'positive-variance' : 'negative-variance'}">
+                                            <strong>${totalCommits > 0 ? formatVariance(totalVariance) : '-'}</strong>
+                                        </td>
+                                    `;
+                                }).join('')}
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        // File upload handling
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'upload-status';
+            statusDiv.textContent = 'Processing file...';
+
+            // Determine file type and process accordingly
+            if (file.name.toLowerCase().endsWith('.csv')) {
+                processCSVFile(file);
+            } else if (file.name.toLowerCase().match(/\.(xlsx|xls)$/)) {
+                processExcelFile(file);
+            } else {
+                showUploadError('Please select a valid Excel (.xlsx, .xls) or CSV file.');
+            }
+        }
+
+        function processCSVFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    Papa.parse(e.target.result, {
+                        header: true,
+                        dynamicTyping: true,
+                        skipEmptyLines: true,
+                        delimitersToGuess: [',', '\t', '|', ';'],
+                        complete: function(results) {
+                            if (results.errors.length > 0) {
+                                console.warn('CSV parsing warnings:', results.errors);
+                            }
+                            processProgramData(results.data);
+                        },
+                        error: function(error) {
+                            showUploadError('Error parsing CSV: ' + error.message);
+                        }
+                    });
+                } catch (error) {
+                    showUploadError('Error reading CSV file: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function processExcelFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                    
+                    processProgramData(jsonData);
+                } catch (error) {
+                    showUploadError('Error reading Excel file: ' + error.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function processProgramData(data) {
+            if (!data || data.length === 0) {
+                showUploadError('No data found in the uploaded file.');
+                return;
+            }
+
+            try {
+                // Clear existing data
+                programsData = {};
+                
+                // Process each row
+                data.forEach((row, index) => {
+                    // Handle different possible column names from requirements
+                    const program = {
+                        id: index + 1,
+                        supplier: cleanString(row['Supplier '] || row['Supplier'] || ''),
+                        programName: cleanString(row['Program Name'] || ''),
+                        programClass: cleanString(row['Program Class '] || row['Program Class'] || ''),
+                        goalType: cleanString(row['Goal Type'] || ''),
+                        productSubGroup: cleanString(row['Product Sub Group'] || ''),
+                        premiseFocus: cleanString(row['Premise Focus'] || ''),
+                        startDate: parseDate(row['Month, Day, Year of Start Date'] || row['Start Date'] || ''),
+                        endDate: parseDate(row['Month, Day, Year of End Date'] || row['End Date'] || ''),
+                        goal: cleanString(row['Goal'] || row['Program Directional Goal'] || ''),
+                        pySales: row['PY Sales'] || '',
+                        needToKnows: cleanString(row['Need to Knows'] || ''),
+                        isStateProgram: false,
+                        state: ''
+                    };
+
+                    // Only add programs with essential data
+                    if (program.programName && program.startDate) {
+                        programsData[program.id] = program;
+                        
+                        // Initialize workflow data for this program
+                        workflowData.tags[program.id] = {
+                            corporate: false,
+                            regions: {},
+                            states: {}
+                        };
+                        workflowData.notes[program.id] = {
+                            corporate: '',
+                            regions: {},
+                            states: {}
+                        };
+                        workflowData.commits[program.id] = {};
+                        workflowData.unitGoals[program.id] = 0;
+                        workflowData.goalLevels[program.id] = 'corporate';
+                    }
+                });
+
+                const programCount = Object.keys(programsData).length;
+                if (programCount === 0) {
+                    showUploadError('No valid programs found. Please check that your file contains the required columns.');
+                    return;
+                }
+
+                showUploadSuccess(`Successfully loaded ${programCount} programs.`);
+                enablePersonaCards();
+
+            } catch (error) {
+                showUploadError('Error processing program data: ' + error.message);
+            }
+        }
+
+        function cleanString(str) {
+            if (typeof str !== 'string') return str;
+            return str.trim();
+        }
+
+        function parseDate(dateStr) {
+            if (!dateStr || typeof dateStr !== 'string') return '';
+            
+            // If already in YYYY-MM-DD format, return as-is
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr.trim())) {
+                return dateStr.trim();
+            }
+            
+            // Try to normalize formats like "1-Oct-25" to "2025-10-01"
+            const parts = dateStr.trim().split(/[-\/\s]/);
+            if (parts.length !== 3) return dateStr;
+            
+            let day, monthStr, year;
+            
+            // Identify which part is which
+            if (isNaN(parts[0])) {
+                // e.g. "Oct 1 2025"
+                [monthStr, day, year] = parts;
+            } else {
+                // e.g. "1-Oct-25" or "1/Oct/25"
+                [day, monthStr, year] = parts;
+            }
+            
+            const monthMap = {
+                jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06',
+                jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12'
+            };
+            
+            const month = monthMap[monthStr.toLowerCase().substring(0, 3)];
+            if (!month) return dateStr;
+            
+            // Normalize 2-digit years to 4-digit
+            if (year.length === 2) {
+                year = parseInt(year) > 50 ? `19${year}` : `20${year}`;
+            }
+            
+            // Pad day to 2 digits
+            day = day.padStart(2, '0');
+            
+            return `${year}-${month}-${day}`; // Always returns YYYY-MM-DD
+        }
+
+        function showUploadSuccess(message) {
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.className = 'upload-status success';
+            statusDiv.textContent = message;
+        }
+
+        function showUploadError(message) {
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.className = 'upload-status error';
+            statusDiv.textContent = message;
+        }
+
+        function enablePersonaCards() {
+            const cards = document.querySelectorAll('.persona-card');
+            cards.forEach(card => {
+                card.classList.remove('disabled');
+                card.onclick = () => selectPersona(card.dataset.persona);
+            });
+        }
+
+        function selectPersona(persona) {
+            currentPersona = persona;
+            showPersonaPage();
+        }
+
+        function showPersonaPage() {
+            document.getElementById('landingPage').style.display = 'none';
+            document.getElementById('personaPage').style.display = 'block';
+            
+            // Update page title and controls based on persona
+            updatePersonaPageHeader();
+            
+            // Show timeline tabs, filters, and table based on persona
+            document.querySelector('.timeline-tabs').style.display = 'block';
+            
+            // Show filters for appropriate personas (not state-sales)
+            const filtersDiv = document.querySelector('.programs-filters');
+            const createProgramGroup = document.getElementById('createProgramGroup');
+            const localProgramOption = document.querySelector('.local-program-option');
+            
+            if (currentPersona === 'state-sales') {
+                filtersDiv.style.display = 'none';
+            } else {
+                filtersDiv.style.display = 'block';
+                // Reset filters to default
+                document.getElementById('programClassFilter').value = 'all';
+                document.getElementById('taggedStatusFilter').value = 'all';
+                
+                // Show/hide LOCAL PROGRAM option and create button for State Trade Dev and State Comm Ops
+                if (currentPersona === 'state-trade-dev' || currentPersona === 'state-comm-ops') {
+                    localProgramOption.style.display = 'block';
+                    createProgramGroup.style.display = 'block';
+                } else {
+                    localProgramOption.style.display = 'none';
+                    createProgramGroup.style.display = 'none';
+                }
+            }
+            
+            document.querySelector('.programs-table-container').style.display = 'block';
+            
+            // Set current month and year to current date
+            document.getElementById('monthSelect').value = currentMonth;
+            document.getElementById('yearSelect').value = currentYear;
+            
+            // Load programs for current timeline
+            loadProgramsForTimeline();
+        }
+
+        function updatePersonaPageHeader() {
+            const titles = {
+                'corporate': 'Corporate View',
+                'region': 'Regional View',
+                'state-trade-dev': 'State Trade Development View',
+                'state-comm-ops': 'State Commercial Operations View',
+                'state-sales': 'State Sales View'
+            };
+            
+            document.getElementById('pageTitle').textContent = titles[currentPersona];
+            
+            // Show/hide region and state selectors based on persona
+            const regionGroup = document.getElementById('regionSelectGroup');
+            const stateGroup = document.getElementById('stateSelectGroup');
+            const leaderGroup = document.getElementById('leaderSelectGroup');
+            
+            if (currentPersona === 'region') {
+                regionGroup.style.display = 'block';
+                stateGroup.style.display = 'none';
+                leaderGroup.style.display = 'none';
+                populateRegionSelect();
+            } else if (currentPersona === 'state-sales') {
+                regionGroup.style.display = 'none';
+                stateGroup.style.display = 'block';
+                leaderGroup.style.display = 'block';
+                populateStateSelect();
+            } else if (currentPersona.startsWith('state-')) {
+                regionGroup.style.display = 'none';
+                stateGroup.style.display = 'block';
+                leaderGroup.style.display = 'none';
+                populateStateSelect();
+            } else {
+                regionGroup.style.display = 'none';
+                stateGroup.style.display = 'none';
+                leaderGroup.style.display = 'none';
+            }
+        }
+
+        function populateRegionSelect() {
+            const select = document.getElementById('regionSelect');
+            select.innerHTML = '<option value="">Select Region</option>';
+            Object.keys(regionalBreakdown).forEach(region => {
+                const option = document.createElement('option');
+                option.value = region;
+                option.textContent = region;
+                select.appendChild(option);
+            });
+        }
+
+        function populateStateSelect() {
+            const select = document.getElementById('stateSelect');
+            select.innerHTML = '<option value="">Select State</option>';
+            
+            Object.keys(statesByRegion).forEach(region => {
+                Object.keys(statesByRegion[region]).forEach(state => {
+                    const option = document.createElement('option');
+                    option.value = state;
+                    option.textContent = state;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        function switchTimeline(timeline) {
+            currentTimeline = timeline;
+            
+            // Update active tab
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.timeline == timeline) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            loadProgramsForTimeline();
+        }
+
+        function loadProgramsForTimeline() {
+            const selectedMonth = parseInt(document.getElementById('monthSelect').value);
+            const selectedYear = parseInt(document.getElementById('yearSelect').value);
+            const filteredPrograms = filterProgramsByTimeline(selectedMonth, selectedYear, currentTimeline);
+            displayPrograms(filteredPrograms);
+        }
+
+        function filterProgramsByTimeline(baseMonth, baseYear, daysOut) {
+            // Calculate target month and year based on timeline
+            let targetDate = new Date(baseYear, baseMonth, 1);
+            
+            // Add months based on timeline (30 days ≈ 1 month, 60 days ≈ 2 months, 90 days ≈ 3 months)
+            const monthsToAdd = Math.round(daysOut / 30);
+            targetDate.setMonth(targetDate.getMonth() + monthsToAdd);
+            
+            const targetMonth = targetDate.getMonth();
+            const targetYear = targetDate.getFullYear();
+            
+            const filteredPrograms = {};
+            
+            Object.keys(programsData).forEach(id => {
+                const program = programsData[id];
+                if (program.startDate) {
+                    // Parse the YYYY-MM-DD date string directly without using Date constructor
+                    const dateParts = program.startDate.split('-');
+                    if (dateParts.length === 3) {
+                        const programYear = parseInt(dateParts[0]);
+                        const programMonth = parseInt(dateParts[1]) - 1; // Convert to 0-based month for comparison
+                        
+                        // Match both month and year
+                        if (programMonth === targetMonth && programYear === targetYear) {
+                            filteredPrograms[id] = program;
+                        }
+                    }
+                }
+            });
+            
+            return filteredPrograms;
+        }
+
+        function applyFilters() {
+            loadProgramsForTimeline();
+        }
+
+        function filterPrograms(programs) {
+            const programClassFilter = document.getElementById('programClassFilter').value;
+            const taggedStatusFilter = document.getElementById('taggedStatusFilter').value;
+            
+            const filteredPrograms = {};
+            
+            Object.keys(programs).forEach(id => {
+                const program = programs[id];
+                let includeProgram = true;
+                
+                // Apply Program Class filter
+                if (programClassFilter !== 'all') {
+                    if (program.programClass !== programClassFilter) {
+                        includeProgram = false;
+                    }
+                }
+                
+                // Apply Tagged Status filter
+                if (taggedStatusFilter !== 'all') {
+                    const isTagged = isProgramTagged(id);
+                    if (taggedStatusFilter === 'tagged' && !isTagged) {
+                        includeProgram = false;
+                    } else if (taggedStatusFilter === 'untagged' && isTagged) {
+                        includeProgram = false;
+                    }
+                }
+                
+                if (includeProgram) {
+                    filteredPrograms[id] = program;
+                }
+            });
+            
+            return filteredPrograms;
+        }
+
+        function displayPrograms(programs) {
+            // Apply filters first
+            const filteredPrograms = filterPrograms(programs);
+            
+            const tbody = document.getElementById('programsTableBody');
+            tbody.innerHTML = '';
+            
+            const programIds = Object.keys(filteredPrograms);
+            let taggedCount = 0;
+            
+            // Check if no programs match filters
+            if (programIds.length === 0) {
+                const noResultsRow = document.createElement('tr');
+                noResultsRow.innerHTML = `
+                    <td colspan="9">
+                        <div class="no-results-message">
+                            <h3>No Programs Found</h3>
+                            <p>No programs match your current filter selections. Try adjusting the filters above.</p>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(noResultsRow);
+                
+                // Update stats
+                document.getElementById('totalPrograms').textContent = '0';
+                document.getElementById('taggedPrograms').textContent = '0';
+                return;
+            }
+            
+            programIds.forEach(id => {
+                const program = filteredPrograms[id];
+                const isTagged = isProgramTagged(id);
+                if (isTagged) taggedCount++;
+                
+                // Check if this persona should see this program
+                if (!shouldShowProgram(id)) return;
+                
+                // Create main row
+                const row = document.createElement('tr');
+                const canTag = canTagPrograms();
+                
+                row.innerHTML = `
+                    <td>
+                        ${canTag ? `
+                            <input type="checkbox" class="tag-checkbox" ${isTagged ? 'checked' : ''} 
+                                   onchange="toggleProgramTag('${id}')" />
+                        ` : ''}
+                    </td>
+                    <td>${program.supplier}</td>
+                    <td>${program.programName}</td>
+                    <td>${program.goalType}</td>
+                    <td>${program.productSubGroup}</td>
+                    <td>${formatDate(program.startDate)}</td>
+                    <td>${formatDate(program.endDate)}</td>
+                    <td>${program.goal}</td>
+                    <td>
+                        <span class="tag-status ${isTagged ? 'tagged' : 'not-tagged'}">
+                            ${isTagged ? 'Tagged' : 'Not Tagged'}
+                        </span>
+                    </td>
+                `;
+                
+                row.onclick = () => toggleExpandedRow(id);
+                row.style.cursor = 'pointer';
+                tbody.appendChild(row);
+                
+                // Create expanded row (initially hidden)
+                const expandedRow = document.createElement('tr');
+                expandedRow.className = 'expanded-row';
+                expandedRow.id = `expanded-${id}`;
+                expandedRow.innerHTML = `
+                    <td colspan="9">
+                        <div class="expanded-content">
+                            ${generateExpandedContent(program, id)}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(expandedRow);
+            });
+            
+            // Update stats - count all filtered programs, not just visible ones for this persona
+            let visibleTaggedCount = 0;
+            programIds.forEach(id => {
+                if (isProgramTagged(id)) visibleTaggedCount++;
+            });
+            
+            document.getElementById('totalPrograms').textContent = programIds.length;
+            document.getElementById('taggedPrograms').textContent = visibleTaggedCount;
+        }
+
+        function openCreateProgramModal() {
+            if (!currentState) {
+                alert('Please select a state before creating a program.');
+                return;
+            }
+            document.getElementById('createProgramModal').style.display = 'flex';
+        }
+
+        function closeCreateProgramModal() {
+            document.getElementById('createProgramModal').style.display = 'none';
+            document.getElementById('createProgramForm').reset();
+        }
+
+        function createNewProgram() {
+            // Validate required fields
+            const form = document.getElementById('createProgramForm');
+            const requiredFields = form.querySelectorAll('input[required], select[required]');
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.style.borderColor = '#dc3545';
+                    isValid = false;
+                } else {
+                    field.style.borderColor = '#ddd';
+                }
+            });
+            
+            if (!isValid) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+            
+            // Validate dates
+            const startDate = document.getElementById('newStartDate').value;
+            const endDate = document.getElementById('newEndDate').value;
+            
+            if (new Date(startDate) >= new Date(endDate)) {
+                alert('End date must be after start date.');
+                return;
+            }
+            
+            // Create new program ID
+            const newProgramId = Math.max(...Object.keys(programsData).map(id => parseInt(id)), 0) + 1;
+            
+            // Create new program object
+            const newProgram = {
+                id: newProgramId,
+                supplier: document.getElementById('newSupplier').value.trim() || '',
+                programName: document.getElementById('newProgramName').value.trim(),
+                programClass: document.getElementById('newProgramClass').value,
+                goalType: document.getElementById('newGoalType').value.trim(),
+                productSubGroup: document.getElementById('newProductSubGroup').value.trim() || '',
+                premiseFocus: document.getElementById('newPremiseFocus').value.trim() || '',
+                startDate: startDate,
+                endDate: endDate,
+                goal: document.getElementById('newGoal').value.trim() || '',
+                pySales: '',
+                needToKnows: document.getElementById('newNeedToKnows').value.trim() || '',
+                isStateProgram: true,
+                state: currentState
+            };
+            
+            // Add to programs data
+            programsData[newProgramId] = newProgram;
+            
+            // Initialize workflow data
+            workflowData.tags[newProgramId] = {
+                corporate: false,
+                regions: {},
+                states: {}
+            };
+            workflowData.notes[newProgramId] = {
+                corporate: '',
+                regions: {},
+                states: {}
+            };
+            workflowData.commits[newProgramId] = {};
+            workflowData.unitGoals[newProgramId] = parseFloat(document.getElementById('newUnitGoal').value) || 0;
+            workflowData.goalLevels[newProgramId] = 'state';
+            
+            // Close modal and refresh view
+            closeCreateProgramModal();
+            
+            // Reset filters to show all programs so the new program appears in the full list
+            document.getElementById('programClassFilter').value = 'all';
+            document.getElementById('taggedStatusFilter').value = 'all';
+            
+            loadProgramsForTimeline();
+            
+            alert(`Program "${newProgram.programName}" created successfully!`);
+        }
+
+        function shouldShowProgram(programId) {
+            const program = programsData[programId];
+            const isTagged = isProgramTagged(programId);
+            
+            if (currentPersona === 'state-trade-dev') {
+                // Show tagged programs (any level) OR programs they created
+                return isTagged || (program.isStateProgram && program.state === currentState);
+            } else if (currentPersona === 'state-comm-ops') {
+                // Show all programs in their state (for tagging) OR programs created locally
+                return program.state === currentState || !program.isStateProgram || isTagged;
+            } else if (currentPersona === 'state-sales') {
+                // Only show tagged programs
+                return isTagged;
+            }
+            
+            // All other personas see all programs
+            return true;
+        }
+
+        function canTagPrograms() {
+            // Only Corporate, Regional, and State Comm Ops can tag
+            return currentPersona === 'corporate' || 
+                   currentPersona === 'region' || 
+                   currentPersona === 'state-comm-ops';
+        }
+
+        function generateExpandedContent(program, programId) {
+            const isTagged = isProgramTagged(programId);
+            const unitGoal = workflowData.unitGoals[programId] || 0;
+            
+            return `
+                <div class="program-details-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Supplier</div>
+                        <div class="detail-value">${program.supplier}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Program Name</div>
+                        <div class="detail-value">${program.programName}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Program Class</div>
+                        <div class="detail-value">${program.programClass}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Goal Type</div>
+                        <div class="detail-value">${program.goalType}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Product Sub Group</div>
+                        <div class="detail-value">${program.productSubGroup}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Premise Focus</div>
+                        <div class="detail-value">${program.premiseFocus}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Start Date</div>
+                        <div class="detail-value">${formatDate(program.startDate)}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">End Date</div>
+                        <div class="detail-value">${formatDate(program.endDate)}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Goal</div>
+                        <div class="detail-value">${program.goal}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">PY Sales</div>
+                        <div class="detail-value">${program.pySales}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Need to Knows</div>
+                        <div class="detail-value">${program.needToKnows}</div>
+                    </div>
+                    ${isTagged && canEditUnitGoal(programId) ? `
+                    <div class="detail-item unit-goal-section">
+                        <div class="detail-label">${getUnitGoalLabel()}</div>
+                        <div class="detail-value">
+                            ${canEditGoalValue(programId) ? `
+                                <input type="number" id="unitGoal-${programId}" value="${unitGoal}" 
+                                       onchange="updateUnitGoal('${programId}', this.value)"
+                                       placeholder="${getUnitGoalPlaceholder()}" 
+                                       style="width: 150px; padding: 5px; border: 1px solid #ddd; border-radius: 4px;" />
+                            ` : `
+                                <span style="padding: 5px; color: #666; font-style: italic;">
+                                    ${unitGoal > 0 ? formatNumber(unitGoal) + ' (Set by higher level)' : 'Not set'}
+                                </span>
+                            `}
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+                
+                ${unitGoal > 0 ? generateGoalDisaggregation(unitGoal, programId) : ''}
+                
+                ${generateCommitAggregationSection(programId, unitGoal)}
+                
+                <div class="notes-section">
+                    <h4>Program Notes & Collaboration</h4>
+                    ${generateNotesSection(programId)}
+                </div>
+                
+                ${currentPersona === 'state-sales' && currentLeader ? generateCommitsSection(programId) : ''}
+            `;
+        }
+
+        function generateGoalDisaggregation(unitGoal, programId) {
+            if (!unitGoal || unitGoal <= 0) return '';
+            
+            const goalLevel = workflowData.goalLevels[programId] || 'corporate';
+            
+            let goalHtml = `
+                <div class="goal-disaggregation-section">
+                    <h4>Goal Disaggregation</h4>
+            `;
+            
+            // Show breakdown based on current persona's context, not where goal was set
+            if (currentPersona === 'corporate') {
+                // Corporate always sees regional breakdown
+                goalHtml += `
+                    <div class="goal-level">
+                        <h5>National Goal</h5>
+                        <div class="goal-item">
+                            <span class="goal-label">Total Units:</span>
+                            <span class="goal-value">${formatNumber(unitGoal)}</span>
+                        </div>
+                    </div>
+                `;
+                
+                const regionalGoals = calculateRegionalGoals(unitGoal);
+                goalHtml += `
+                    <div class="goal-level">
+                        <h5>Regional Goals</h5>
+                        ${Object.keys(regionalGoals).map(region => `
+                            <div class="goal-item">
+                                <span class="goal-label">${region} (${Math.round(regionalBreakdown[region] * 100)}%):</span>
+                                <span class="goal-value">${formatNumber(regionalGoals[region])}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else if (currentPersona === 'region' && currentRegion) {
+                // Regional always sees state breakdown for their region
+                let baseGoal;
+                const goalLevel = workflowData.goalLevels[programId] || 'corporate';
+                
+                // If the goal was set at regional level, use it directly
+                // Otherwise, calculate the regional portion from the unit goal
+                if (goalLevel === 'regional') {
+                    baseGoal = unitGoal; // Use the goal as set by the region
+                } else {
+                    baseGoal = getBaseGoalForPersona(unitGoal); // Calculate regional portion
+                }
+                
+                goalHtml += `
+                    <div class="goal-level">
+                        <h5>${currentRegion} Regional Goal</h5>
+                        <div class="goal-item">
+                            <span class="goal-label">${currentRegion} Total:</span>
+                            <span class="goal-value">${formatNumber(baseGoal)}</span>
+                        </div>
+                    </div>
+                `;
+                
+                // Show state breakdowns within this region
+                if (statesByRegion[currentRegion]) {
+                    goalHtml += `
+                        <div class="goal-level">
+                            <h5>${currentRegion} State Goals</h5>
+                            ${Object.keys(statesByRegion[currentRegion]).map(state => {
+                                const stateGoal = Math.round(baseGoal * statesByRegion[currentRegion][state]);
+                                return `
+                                    <div class="goal-item">
+                                        <span class="goal-label">${state} (${Math.round(statesByRegion[currentRegion][state] * 100)}%):</span>
+                                        <span class="goal-value">${formatNumber(stateGoal)}</span>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `;
+                }
+            } else if (currentPersona.startsWith('state-') && currentState) {
+                // State personas always see sales channel breakdown for their state
+                let baseGoal;
+                const goalLevel = workflowData.goalLevels[programId] || 'corporate';
+                
+                // If the goal was set at state level, use it directly
+                // Otherwise, calculate the state portion from the unit goal
+                if (goalLevel === 'state') {
+                    baseGoal = unitGoal; // Use the goal as set by the state
+                } else {
+                    baseGoal = getBaseGoalForPersona(unitGoal); // Calculate state portion
+                }
+                
+                goalHtml += `
+                    <div class="goal-level">
+                        <h5>${currentState} State Goal</h5>
+                        <div class="goal-item">
+                            <span class="goal-label">${currentState} Total:</span>
+                            <span class="goal-value">${formatNumber(baseGoal)}</span>
+                        </div>
+                    </div>
+                `;
+                
+                // Show sales channel breakdowns within this state
+                const channelGoals = calculateSalesChannelGoals(baseGoal);
+                goalHtml += `
+                    <div class="goal-level">
+                        <h5>${currentState} Sales Channel Goals</h5>
+                        ${Object.keys(channelGoals).map(channel => `
+                            <div class="goal-item">
+                                <span class="goal-label">${channel} (${Math.round(salesChannelBreakdown[channel] * 100)}%):</span>
+                                <span class="goal-value">${formatNumber(channelGoals[channel])}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                // For sales persona with leader selected, highlight their specific goal
+                if (currentPersona === 'state-sales' && currentLeader) {
+                    const leaderGoal = channelGoals[currentLeader];
+                    goalHtml += `
+                        <div class="goal-level" style="background: #fff3cd; border: 2px solid #B73A3A;">
+                            <h5>Your Goal - ${currentLeader} Leader</h5>
+                            <div class="goal-item">
+                                <span class="goal-label">${currentLeader}:</span>
+                                <span class="goal-value" style="font-size: 1.3em;">${formatNumber(leaderGoal)}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            goalHtml += '</div>';
+            return goalHtml;
+        }
+
+        function findRegionForState(state) {
+            for (const region of Object.keys(statesByRegion)) {
+                if (statesByRegion[region][state]) {
+                    return region;
+                }
+            }
+            return null;
+        }
+
+        function canEditUnitGoal(programId) {
+            return (currentPersona === 'corporate' || 
+                   currentPersona === 'region' || 
+                   currentPersona.startsWith('state-')) && isProgramTagged(programId);
+        }
+
+        function canEditGoalValue(programId) {
+            const unitGoal = workflowData.unitGoals[programId] || 0;
+            const goalLevel = workflowData.goalLevels[programId];
+            
+            // If no goal has been set yet, anyone who can edit unit goals can set it
+            if (unitGoal === 0 || !goalLevel) {
+                return true;
+            }
+            
+            // If goal exists, can only edit if you're at the same level or higher than who set it
+            if (goalLevel === 'corporate') {
+                return currentPersona === 'corporate';
+            } else if (goalLevel === 'regional') {
+                return currentPersona === 'corporate' || currentPersona === 'region';
+            } else if (goalLevel === 'state') {
+                return currentPersona === 'corporate' || 
+                       currentPersona === 'region' || 
+                       currentPersona.startsWith('state-');
+            }
+            
+            return true; // Default to allowing edits if goalLevel is undefined
+        }
+
+        function getUnitGoalLabel() {
+            if (currentPersona === 'corporate') return 'Unit Goal (National)';
+            if (currentPersona === 'region') return `Unit Goal (${currentRegion} Region)`;
+            if (currentPersona.startsWith('state-')) return `Unit Goal (${currentState} State)`;
+            return 'Unit Goal';
+        }
+
+        function getUnitGoalPlaceholder() {
+            if (currentPersona === 'corporate') return 'Enter national unit goal';
+            if (currentPersona === 'region') return `Enter ${currentRegion} regional goal`;
+            if (currentPersona.startsWith('state-')) return `Enter ${currentState} state goal`;
+            return 'Enter unit goal';
+        }
+
+        function getCurrentProgramId() {
+            // Helper to get current program ID from context
+            const expandedRows = document.querySelectorAll('.expanded-row');
+            for (let row of expandedRows) {
+                if (row.style.display === 'table-row') {
+                    return row.id.replace('expanded-', '');
+                }
+            }
+            return null;
+        }
+
+        function generateNotesSection(programId) {
+            const notes = workflowData.notes[programId] || {
+                corporate: '',
+                regions: {},
+                states: {}
+            };
+            
+            let notesHtml = '';
+            
+            // Corporate Notes
+            if (currentPersona === 'corporate') {
+                notesHtml += `
+                    <div class="note-item editable">
+                        <div class="note-header">Corporate Notes</div>
+                        <div class="note-content">
+                            <textarea id="corporate-note-${programId}" 
+                                      onchange="updateNote('${programId}', 'corporate', '', this.value)"
+                                      placeholder="Add corporate notes...">${notes.corporate || ''}</textarea>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Show corporate notes as read-only for other personas
+                if (notes.corporate) {
+                    notesHtml += `
+                        <div class="note-item readonly">
+                            <div class="note-header">Corporate Notes (Read-Only)</div>
+                            <div class="note-content readonly">${notes.corporate}</div>
+                        </div>
+                    `;
+                }
+            }
+            
+            // Regional Notes
+            if (currentPersona === 'region') {
+                notesHtml += `
+                    <div class="note-item editable">
+                        <div class="note-header">Regional Notes - ${currentRegion}</div>
+                        <div class="note-content">
+                            <textarea id="regional-note-${programId}" 
+                                      onchange="updateNote('${programId}', 'region', '${currentRegion}', this.value)"
+                                      placeholder="Add regional notes...">${notes.regions[currentRegion] || ''}</textarea>
+                        </div>
+                    </div>
+                `;
+            } else if (currentPersona.startsWith('state-')) {
+                // Show regional notes as read-only for state personas
+                Object.keys(notes.regions).forEach(region => {
+                    if (notes.regions[region]) {
+                        notesHtml += `
+                            <div class="note-item readonly">
+                                <div class="note-header">Regional Notes - ${region} (Read-Only)</div>
+                                <div class="note-content readonly">${notes.regions[region]}</div>
+                            </div>
+                        `;
+                    }
+                });
+            }
+            
+            // State-specific notes
+            if (currentPersona === 'state-comm-ops') {
+                notesHtml += `
+                    <div class="note-item editable">
+                        <div class="note-header">Commercial Operations Notes - ${currentState}</div>
+                        <div class="note-content">
+                            <textarea id="commops-note-${programId}" 
+                                      onchange="updateNote('${programId}', 'state', '${currentState}_commops', this.value)"
+                                      placeholder="Add commercial operations notes...">${notes.states[currentState + '_commops'] || ''}</textarea>
+                        </div>
+                    </div>
+                `;
+            } else if (currentPersona === 'state-trade-dev') {
+                // Show comm ops notes as read-only
+                if (notes.states[currentState + '_commops']) {
+                    notesHtml += `
+                        <div class="note-item readonly">
+                            <div class="note-header">Commercial Operations Notes - ${currentState} (Read-Only)</div>
+                            <div class="note-content readonly">${notes.states[currentState + '_commops']}</div>
+                        </div>
+                    `;
+                }
+                
+                notesHtml += `
+                    <div class="note-item editable">
+                        <div class="note-header">Trade Development Notes - ${currentState}</div>
+                        <div class="note-content">
+                            <textarea id="tradedev-note-${programId}" 
+                                      onchange="updateNote('${programId}', 'state', '${currentState}', this.value)"
+                                      placeholder="Add trade development notes...">${notes.states[currentState] || ''}</textarea>
+                        </div>
+                    </div>
+                `;
+            } else if (currentPersona === 'state-sales') {
+                // Show all higher-level notes as read-only
+                if (notes.states[currentState + '_commops']) {
+                    notesHtml += `
+                        <div class="note-item readonly">
+                            <div class="note-header">Commercial Operations Notes - ${currentState} (Read-Only)</div>
+                            <div class="note-content readonly">${notes.states[currentState + '_commops']}</div>
+                        </div>
+                    `;
+                }
+                
+                if (notes.states[currentState]) {
+                    notesHtml += `
+                        <div class="note-item readonly">
+                            <div class="note-header">Trade Development Notes - ${currentState} (Read-Only)</div>
+                            <div class="note-content readonly">${notes.states[currentState]}</div>
+                        </div>
+                    `;
+                }
+                
+                // Add sales notes for the selected leader only
+                if (currentLeader) {
+                    const salesKey = currentState + '_sales_' + currentLeader.replace(/[^a-zA-Z0-9]/g, '');
+                    notesHtml += `
+                        <div class="note-item editable">
+                            <div class="note-header">Your Sales Notes - ${currentLeader} Leader</div>
+                            <div class="note-content">
+                                <textarea id="sales-note-${programId}-${currentLeader}" 
+                                          onchange="updateNote('${programId}', 'state', '${salesKey}', this.value)"
+                                          placeholder="Add your ${currentLeader} sales notes...">${notes.states[salesKey] || ''}</textarea>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    notesHtml += `
+                        <div class="note-item">
+                            <div class="note-header" style="color: #ffc107;">Please select a Sales Leader role above to add notes and commits</div>
+                        </div>
+                    `;
+                }
+            }
+            
+            return notesHtml || '<p style="color: #666; font-style: italic;">No notes available for this persona level.</p>';
+        }
+
+        function generateCommitsSection(programId) {
+            if (!currentState || !currentLeader) return '';
+            
+            const commits = workflowData.commits[programId] || {};
+            const commitKey = currentState + '_' + currentLeader.replace(/[^a-zA-Z0-9]/g, '');
+            const leaderCommits = commits[commitKey] || {};
+            
+            // Get current commit period based on timeline
+            const currentPeriod = currentTimeline.toString();
+            const currentCommit = leaderCommits[currentPeriod] || '';
+            
+            // Get historical commits
+            const historicalCommits = [];
+            ['90', '60', '30'].forEach(period => {
+                if (period !== currentPeriod && leaderCommits[period]) {
+                    historicalCommits.push({
+                        period: period,
+                        value: leaderCommits[period]
+                    });
+                }
+            });
+            
+            return `
+                <div class="commits-section">
+                    <h4>Your Sales Commit - ${currentLeader} Leader</h4>
+                    <div class="commit-item">
+                        <div class="commit-header">Current Period: ${currentTimeline} Days Out</div>
+                        <div class="commit-current">
+                            <label>Your ${currentTimeline}-Day Commit:</label>
+                            <input type="number" 
+                                   value="${currentCommit}" 
+                                   onchange="updateCommit('${programId}', '${commitKey}', '${currentPeriod}', this.value)"
+                                   placeholder="Enter your commit" 
+                                   style="width: 150px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-left: 10px;" />
+                        </div>
+                        
+                        ${historicalCommits.length > 0 ? `
+                            <div class="commit-history">
+                                <h5>Previous Commits:</h5>
+                                ${historicalCommits.map(commit => `
+                                    <div class="history-item">
+                                        <span class="history-label">${commit.period} Days Out:</span>
+                                        <span class="history-value">${formatNumber(commit.value)}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function isProgramTagged(programId) {
+            const tags = workflowData.tags[programId];
+            if (!tags) return false;
+            
+            // Check corporate tagging
+            if (tags.corporate) return true;
+            
+            // Check regional tagging - only for relevant states
+            for (const region of Object.keys(tags.regions)) {
+                if (tags.regions[region]) {
+                    // If viewing from a state perspective, check if state is in this region
+                    if (currentPersona.startsWith('state-') && currentState) {
+                        if (statesByRegion[region] && statesByRegion[region][currentState]) {
+                            return true;
+                        }
+                    } else {
+                        // For corporate/regional views, any regional tag counts
+                        return true;
+                    }
+                }
+            }
+            
+            // Check state tagging - only for current state
+            if (currentPersona.startsWith('state-') && currentState) {
+                return tags.states[currentState] || false;
+            }
+            
+            // For non-state personas, check if any state is tagged
+            return Object.values(tags.states).some(tagged => tagged);
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr || typeof dateStr !== 'string') return '';
+            
+            // Handle YYYY-MM-DD format
+            const parts = dateStr.split('-');
+            if (parts.length === 3) {
+                const [year, month, day] = parts;
+                return `${parseInt(month)}/${parseInt(day)}/${year}`;
+            }
+            
+            // If not in expected format, return as-is
+            return dateStr;
+        }
+
+        function toggleProgramTag(programId) {
+            if (!canTagPrograms()) return; // Prevent tagging for personas that shouldn't tag
+            
+            if (!workflowData.tags[programId]) {
+                workflowData.tags[programId] = {
+                    corporate: false,
+                    regions: {},
+                    states: {}
+                };
+            }
+            
+            const tags = workflowData.tags[programId];
+            
+            // Tagging logic based on persona
+            if (currentPersona === 'corporate') {
+                tags.corporate = !tags.corporate;
+                if (tags.corporate) {
+                    // Corporate tagging automatically tags all regions and states
+                    Object.keys(regionalBreakdown).forEach(region => {
+                        tags.regions[region] = true;
+                    });
+                    Object.keys(statesByRegion).forEach(region => {
+                        Object.keys(statesByRegion[region]).forEach(state => {
+                            tags.states[state] = true;
+                        });
+                    });
+                } else {
+                    // Untagging corporate removes all tags
+                    tags.regions = {};
+                    tags.states = {};
+                    workflowData.unitGoals[programId] = 0;
+                }
+            } else if (currentPersona === 'region' && currentRegion) {
+                tags.regions[currentRegion] = !tags.regions[currentRegion];
+                if (tags.regions[currentRegion]) {
+                    // Regional tagging automatically tags only states in that region
+                    if (statesByRegion[currentRegion]) {
+                        Object.keys(statesByRegion[currentRegion]).forEach(state => {
+                            tags.states[state] = true;
+                        });
+                    }
+                } else {
+                    // Untagging region removes state tags only in that region
+                    if (statesByRegion[currentRegion]) {
+                        Object.keys(statesByRegion[currentRegion]).forEach(state => {
+                            tags.states[state] = false;
+                        });
+                    }
+                }
+            } else if (currentPersona === 'state-comm-ops' && currentState) {
+                // State-level tagging only affects the specific state
+                tags.states[currentState] = !tags.states[currentState];
+            }
+            
+            // Refresh the display
+            loadProgramsForTimeline();
+        }
+
+        function toggleExpandedRow(programId) {
+            const expandedRow = document.getElementById(`expanded-${programId}`);
+            if (expandedRow.style.display === 'table-row') {
+                expandedRow.style.display = 'none';
+            } else {
+                expandedRow.style.display = 'table-row';
+            }
+        }
+
+        // Goal calculation functions
+        function calculateRegionalGoals(unitGoal) {
+            const goals = {};
+            Object.keys(regionalBreakdown).forEach(region => {
+                goals[region] = Math.round(unitGoal * regionalBreakdown[region]);
+            });
+            return goals;
+        }
+
+        function calculateStateGoals(unitGoal) {
+            const goals = {};
+            Object.keys(statesByRegion).forEach(region => {
+                const regionGoal = Math.round(unitGoal * regionalBreakdown[region]);
+                Object.keys(statesByRegion[region]).forEach(state => {
+                    goals[state] = Math.round(regionGoal * statesByRegion[region][state]);
+                });
+            });
+            return goals;
+        }
+
+        function calculateStateGoal(unitGoal, state) {
+            // Find which region this state belongs to
+            for (const region of Object.keys(statesByRegion)) {
+                if (statesByRegion[region][state]) {
+                    const regionGoal = Math.round(unitGoal * regionalBreakdown[region]);
+                    return Math.round(regionGoal * statesByRegion[region][state]);
+                }
+            }
+            return 0;
+        }
+
+        function calculateSalesChannelGoals(stateGoal) {
+            const goals = {};
+            Object.keys(salesChannelBreakdown).forEach(channel => {
+                goals[channel] = Math.round(stateGoal * salesChannelBreakdown[channel]);
+            });
+            return goals;
+        }
+
+        function formatNumber(num) {
+            return new Intl.NumberFormat().format(Math.round(num));
+        }
+
+        // Data update functions
+        function updateUnitGoal(programId, value) {
+            const numValue = parseFloat(value) || 0;
+            workflowData.unitGoals[programId] = numValue;
+            
+            // Set the goal level based on current persona
+            if (currentPersona === 'corporate') {
+                workflowData.goalLevels[programId] = 'corporate';
+            } else if (currentPersona === 'region') {
+                workflowData.goalLevels[programId] = 'regional';
+            } else if (currentPersona.startsWith('state-')) {
+                workflowData.goalLevels[programId] = 'state';
+            }
+            
+            // Refresh the expanded row to show updated disaggregation
+            const expandedRow = document.getElementById(`expanded-${programId}`);
+            if (expandedRow && expandedRow.style.display === 'table-row') {
+                const program = programsData[programId];
+                expandedRow.querySelector('.expanded-content').innerHTML = generateExpandedContent(program, programId);
+            }
+        }
+
+        function updateNote(programId, noteType, noteKey, value) {
+            if (!workflowData.notes[programId]) {
+                workflowData.notes[programId] = {
+                    corporate: '',
+                    regions: {},
+                    states: {}
+                };
+            }
+            
+            if (noteType === 'corporate') {
+                workflowData.notes[programId].corporate = value;
+            } else if (noteType === 'region') {
+                workflowData.notes[programId].regions[noteKey] = value;
+            } else if (noteType === 'state') {
+                workflowData.notes[programId].states[noteKey] = value;
+            }
+        }
+
+        function updateCommit(programId, commitKey, timePeriod, value) {
+            if (!workflowData.commits[programId]) {
+                workflowData.commits[programId] = {};
+            }
+            if (!workflowData.commits[programId][commitKey]) {
+                workflowData.commits[programId][commitKey] = {};
+            }
+            
+            const numValue = parseFloat(value) || 0;
+            workflowData.commits[programId][commitKey][timePeriod] = numValue;
+        }
+
+        function goBack() {
+            document.getElementById('personaPage').style.display = 'none';
+            document.getElementById('landingPage').style.display = 'block';
+        }
+
+        function saveData() {
+            // Implement data saving logic
+            alert('Data saved successfully!');
+        }
+
+        // Event listeners
+        document.getElementById('monthSelect').addEventListener('change', loadProgramsForTimeline);
+        document.getElementById('yearSelect').addEventListener('change', loadProgramsForTimeline);
+        document.getElementById('regionSelect').addEventListener('change', function() {
+            currentRegion = this.value;
+            loadProgramsForTimeline();
+        });
+        document.getElementById('stateSelect').addEventListener('change', function() {
+            currentState = this.value;
+            loadProgramsForTimeline();
+        });
+        document.getElementById('leaderSelect').addEventListener('change', function() {
+            currentLeader = this.value;
+            loadProgramsForTimeline();
+        });
+
+        // File upload drag and drop
+        const fileUpload = document.querySelector('.file-upload');
+        
+        fileUpload.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+        
+        fileUpload.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+        });
+        
+        fileUpload.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                document.getElementById('fileInput').files = files;
+                handleFileUpload({ target: { files: files } });
+            }
+        });
+    </script>
+</body>
+</html>
