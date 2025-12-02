@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PACE: Cocktail Proposal Tool</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f0f0;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        /* Left Panel - Printable Calculator (11" x 8" portrait full page) */
+        .calculator-panel {
+            width: 11in;
+            height: 11in;
+            background: white;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: #f5f5f5;
+            padding: 15px 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .header-subtitle {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .content {
+            padding: 10px 18px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .section-header {
+            background: #f8f8f8;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            border-left: 3px solid #007bff;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.1);
+        }
+
+        /* Ingredients Table */
+        .table-wrapper {
+            overflow-x: auto;
+            margin-bottom: 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            table-layout: fixed;
+        }
+
+        /* Column widths for optimal spacing */
+        th:nth-child(1), td:nth-child(1) { width: 16%; } /* Ingredient */
+        th:nth-child(2), td:nth-child(2) { width: 11%; } /* Type */
+        th:nth-child(3), td:nth-child(3) { width: 13%; } /* Package Size */
+        th:nth-child(4), td:nth-child(4) { width: 11%; } /* Bottle Price */
+        th:nth-child(5), td:nth-child(5) { width: 9%; }  /* Unit $ */
+        th:nth-child(6), td:nth-child(6) { width: 10%; } /* Recipe Qty */
+        th:nth-child(7), td:nth-child(7) { width: 11%; } /* Recipe Unit */
+        th:nth-child(8), td:nth-child(8) { width: 10%; } /* Cost */
+        th:nth-child(9), td:nth-child(9) { width: 9%; }  /* Action */
+
+        thead {
+            background: #f8f8f8;
+        }
+
+        th {
+            padding: 7px 5px;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+            border-bottom: 2px solid #e0e0e0;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 5px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        td input, td select {
+            width: 100%;
+            padding: 4px 6px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        /* Limit bottle price input width */
+        td input[id^="itemPrice"] {
+            max-width: 85px;
+        }
+
+        /* Limit recipe quantity field width */
+        td input[id^="recipeQty"] {
+            width: 60px;
+        }
+
+        tbody tr:hover {
+            background: #fafafa;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #117a8b;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #bd2130;
+        }
+
+        .btn-remove {
+            background: #dc3545;
+            color: white;
+            padding: 2px 8px;
+            font-size: 10px;
+        }
+
+        .btn-remove:hover {
+            background: #c82333;
+        }
+
+        /* Price Analysis Section */
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .analysis-box {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .analysis-box h3 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+            border-bottom: 2px solid #007bff;
+        }
+
+        .analysis-box label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #555;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .analysis-box input,
+        .analysis-box select {
+            font-size: 12px;
+            padding: 5px 8px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+
+        .analysis-box select {
+            width: 100%;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 12px;
+        }
+
+        .metric-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .metric-value {
+            font-weight: 700;
+            color: #333;
+        }
+
+        .slider-container {
+            margin: 10px 0;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 5px;
+            border-radius: 3px;
+            background: #d3d3d3;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #007bff;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #007bff;
+            cursor: pointer;
+            border: none;
+        }
+
+        .price-input-group {
+            margin-top: 8px;
+        }
+
+        .price-input-group input {
+            padding: 5px 10px;
+            font-size: 11px;
+        }
+
+        .gross-profit {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 11px;
+        }
+
+        .gross-profit strong {
+            color: #155724;
+        }
+
+        /* Right Panel - F.O.C.U.S. Sales Pitch */
+        .focus-panel {
+            width: 800px;
+            background: white;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            max-height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .focus-header {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            padding: 15px 20px;
+        }
+
+        .focus-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .focus-header p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .focus-content {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .customer-need-selector {
+            margin-bottom: 20px;
+        }
+
+        .customer-need-selector label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .customer-need-selector select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .focus-step {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border-left: 4px solid #007bff;
+        }
+
+        .focus-step-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #007bff;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .focus-step-content {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .focus-panel {
+                display: none;
+            }
+            
+            .calculator-panel {
+                border: none;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Left Panel: Calculator (Printable) -->
+    <div class="calculator-panel">
+        <div class="header">
+            <h1>PACE: Cocktail Proposal Tool</h1>
+            <div class="header-subtitle">Southern Glazer's Wine & Spirits</div>
+        </div>
+
+        <div class="content">
+            <!-- Recipe & Pricing Inputs -->
+            <div class="section-header">Recipe & Pricing Inputs</div>
+            <div class="input-row">
+                <div class="input-group">
+                    <label for="cocktailName">Cocktail Name</label>
+                    <input type="text" id="cocktailName" placeholder="e.g., Margarita" oninput="updateCalculations()">
+                </div>
+            </div>
+
+            <!-- Ingredients Table -->
+            <div class="section-header">Ingredients</div>
+            <div class="table-wrapper">
+                <table id="ingredientsTable">
+                    <thead>
+                        <tr>
+                            <th>Ingredient</th>
+                            <th>Type</th>
+                            <th>Package Size</th>
+                            <th>Bottle Price ($)</th>
+                            <th>Unit $</th>
+                            <th>Recipe Qty</th>
+                            <th>Recipe Unit</th>
+                            <th>Cost ($)</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ingredientsBody">
+                        <!-- Rows added dynamically -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="addIngredient()">+ Add Ingredient</button>
+                <button class="btn btn-secondary" onclick="clearAll()">Clear All</button>
+                <button class="btn btn-danger" onclick="resetAll()">Reset All Fields</button>
+                <button class="btn btn-success" onclick="saveCalculator()">Save Calculator</button>
+                <button class="btn btn-info" onclick="saveCoachingPanel()">Save Coaching Panel</button>
+            </div>
+
+            <!-- Price Analysis & Bottle Yield Side by Side -->
+            <div class="analysis-grid">
+                <!-- Price Analysis -->
+                <div class="analysis-box">
+                    <h3>Price Analysis</h3>
+                    <div class="metric-row">
+                        <span class="metric-label">Total Cost per Cocktail:</span>
+                        <span class="metric-value" id="totalCost">$0.00</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Suggested Menu Price:</span>
+                        <span class="metric-value" id="suggestedPrice">$0.00</span>
+                    </div>
+                    
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Target Pour Cost %</span>
+                            <span id="targetPourCostDisplay">20%</span>
+                        </div>
+                        <input type="range" id="targetPourCost" min="10" max="40" value="20" step="0.5" oninput="updateFromPourCost()">
+                    </div>
+
+                    <div class="price-input-group">
+                        <label style="font-size: 11px; font-weight: 600; display: block; margin-bottom: 4px;">Set Menu Price ($)</label>
+                        <input type="number" id="menuPrice" placeholder="e.g., 8.60" step="0.01" oninput="updateFromMenuPrice()">
+                    </div>
+
+                    <div class="metric-row" style="margin-top: 10px;">
+                        <span class="metric-label">Actual Pour Cost %:</span>
+                        <span class="metric-value" id="actualPourCost">--</span>
+                    </div>
+
+                    <div class="gross-profit">
+                        <strong>Gross Profit per Cocktail:</strong> <span id="grossProfit">$0.00</span>
+                    </div>
+                </div>
+
+                <!-- Bottle Yield Analysis -->
+                <div class="analysis-box">
+                    <h3>Bottle Yield Analysis</h3>
+                    
+                    <div class="input-group" style="margin-bottom: 10px;">
+                        <label>Select Ingredient to Analyze</label>
+                        <select id="selectIngredient" onchange="updateBottleYield()">
+                            <option value="">Choose ingredient...</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group" style="margin-bottom: 10px;">
+                        <label>Number of Bottles to Order</label>
+                        <input type="number" id="numBottles" value="12" min="1" oninput="updateBottleYield()">
+                    </div>
+
+                    <div class="input-group" style="margin-bottom: 10px;">
+                        <label>Bottles per Case</label>
+                        <select id="bottlesPerCase" onchange="updateBottleYield()">
+                            <option value="6">6 bottles/case</option>
+                            <option value="12" selected>12 bottles/case</option>
+                            <option value="24">24 bottles/case</option>
+                        </select>
+                    </div>
+
+                    <div style="background: #e3f2fd; padding: 8px 10px; border-radius: 4px; margin-bottom: 10px; font-size: 11px; color: #1565c0;">
+                        <strong>Order Summary:</strong> <span id="orderSummary">1 case (12 bottles)</span>
+                    </div>
+
+                    <div class="metric-row">
+                        <span class="metric-label">Cocktails per Bottle:</span>
+                        <span class="metric-value" id="cocktailsPerBottle">--</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Total Revenue Potential:</span>
+                        <span class="metric-value" id="totalRevenue">--</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Total Bottle Cost:</span>
+                        <span class="metric-value" id="ingredientCost">--</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Total Gross Profit:</span>
+                        <span class="metric-value" id="totalGross">--</span>
+                    </div>
+                    <div class="metric-row" style="border-top: 1px solid #ddd; padding-top: 8px; margin-top: 8px;">
+                        <span class="metric-label">Break-Even (cocktails to cover cost):</span>
+                        <span class="metric-value" id="breakEven">--</span>
+                    </div>
+                    <div style="font-size: 9px; color: #666; margin-top: 8px; font-style: italic;">
+                        Break-even shows how many cocktails you need to sell to cover the total ingredient cost for this order.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Panel: F.O.C.U.S. Sales Pitch (Not Printable) -->
+    <div class="focus-panel">
+        <div class="focus-header">
+            <h2>F.O.C.U.S. Sales Pitch (Dynamic)</h2>
+            <p>Sales Consultant Reference Only</p>
+        </div>
+
+        <div class="focus-content">
+            <div class="customer-need-selector">
+                <label>Customer's Primary Need</label>
+                <select id="customerNeed" onchange="generateFocusPitch()">
+                    <option value="" selected>Select a primary need...</option>
+                    <option value="elevate">Elevate Premium Offerings</option>
+                    <option value="margins">Improve Profit Margins</option>
+                    <option value="signature">Build Signature Cocktail Program</option>
+                    <option value="revenue">Maximize Revenue per Bottle</option>
+                    <option value="consistency">Improve Speed & Consistency</option>
+                    <option value="cost">Better Cost Control</option>
+                    <option value="waste">Reduce Beverage Waste</option>
+                    <option value="check">Increase Check Average</option>
+                    <option value="differentiate">Differentiate from Competitors</option>
+                    <option value="training">Simplify Staff Training</option>
+                </select>
+            </div>
+
+            <div id="focusPitchContent">
+                <!-- Frame the Conversation -->
+                <div class="focus-step">
+                    <div class="focus-step-title">Frame the Conversation</div>
+                    <div class="focus-step-content" id="frameContent">
+                        Picking up from our last conversation: you're running about $1.72 cost per cocktail. At a target pour of 20%, the suggested menu price comes to $8.60. If we price at $8.60, your actual pour is 20.0% and gross is $6.88 per drink.
+                    </div>
+                </div>
+
+                <!-- Offer Insights & Features -->
+                <div class="focus-step">
+                    <div class="focus-step-title">Offer Insights & Features</div>
+                    <div class="focus-step-content" id="insightsContent">
+                        Here's what the numbers suggest: you're looking at 16 cocktails per bottle. Across the planned bottles, that's $1744.80 in revenue, with ingredient cost around $349.44 and total gross near $1395.84. Break-even is roughly 51 cocktails.
+                    </div>
+                </div>
+
+                <!-- Connect to Business Needs -->
+                <div class="focus-step">
+                    <div class="focus-step-title">Connect to Business Needs</div>
+                    <div class="focus-step-content" id="connectContent">
+                        Premium cues land when 20% holds and price aligns to $8.60 so the value story feels natural.
+                    </div>
+                </div>
+
+                <!-- Understand Concerns -->
+                <div class="focus-step">
+                    <div class="focus-step-title">Understand Concerns</div>
+                    <div class="focus-step-content" id="concernsContent">
+                        What might get in the way—price sensitivity, staff training, or inventory control? We can set a plan that addresses each and fits your operation.
+                    </div>
+                </div>
+
+                <!-- Secure the Close -->
+                <div class="focus-step">
+                    <div class="focus-step-title">Secure the Close</div>
+                    <div class="focus-step-content" id="closeContent">
+                        Let's pilot the premium flight and review margin after two weeks; if $6.88 holds, we expand.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ingredientCount = 0;
+
+        // Initialize with one row
+        window.onload = function() {
+            console.log('Page loaded');
+            addIngredient();
+            showFocusFramework();
+        };
+
+        function addIngredient() {
+            console.log('=== addIngredient START ===');
+            ingredientCount++;
+            const tbody = document.getElementById('ingredientsBody');
+            console.log('tbody:', tbody);
+            
+            if (!tbody) {
+                alert('ERROR: Cannot find ingredient table');
+                return;
+            }
+            
+            const row = tbody.insertRow();
+            console.log('Row created');
+            
+            row.innerHTML = '<td><input type="text" id="ingredient' + ingredientCount + '" placeholder="Ingredient name" oninput="updateCalculations()"></td>' +
+                '<td><select id="type' + ingredientCount + '" onchange="updateCalculations()">' +
+                '<option value="spirits">Spirits</option>' +
+                '<option value="liqueur">Liqueur</option>' +
+                '<option value="mixer">Mixer</option>' +
+                '<option value="fresh">Fresh</option>' +
+                '<option value="other">Other</option>' +
+                '</select></td>' +
+                '<td><select id="packageSize' + ingredientCount + '" onchange="updateCalculations()">' +
+                '<option value="750">750 ml</option>' +
+                '<option value="1000">1000 ml</option>' +
+                '<option value="375">375 ml</option>' +
+                '</select></td>' +
+                '<td><input type="number" id="itemPrice' + ingredientCount + '" placeholder="0.00" step="0.01" oninput="updateCalculations()"></td>' +
+                '<td><span id="unitPrice' + ingredientCount + '">--</span></td>' +
+                '<td><input type="number" id="recipeQty' + ingredientCount + '" placeholder="0" step="0.1" oninput="updateCalculations()"></td>' +
+                '<td><select id="recipeUnit' + ingredientCount + '" onchange="updateCalculations()">' +
+                '<option value="oz">oz</option>' +
+                '<option value="ml">ml</option>' +
+                '</select></td>' +
+                '<td><span id="cost' + ingredientCount + '">--</span></td>' +
+                '<td><button class="btn btn-remove" onclick="removeRow(this)">×</button></td>';
+            
+            console.log('Row HTML set, count:', ingredientCount);
+            updateIngredientDropdown();
+            console.log('=== addIngredient END ===');
+        }
+
+        function removeRow(btn) {
+            const row = btn.closest('tr');
+            row.remove();
+            updateCalculations();
+            updateIngredientDropdown();
+        }
+
+        function updateIngredientDropdown() {
+            const dropdown = document.getElementById('selectIngredient');
+            if (!dropdown) return;
+            
+            // Clear existing options except the first placeholder
+            dropdown.innerHTML = '<option value="">Choose ingredient...</option>';
+            
+            // Get all ingredient rows
+            const rows = document.querySelectorAll('#ingredientsBody tr');
+            rows.forEach((row, index) => {
+                const rowId = row.querySelector('input[id^="ingredient"]')?.id.replace('ingredient', '');
+                if (rowId) {
+                    const ingredientName = document.getElementById('ingredient' + rowId)?.value || 'Ingredient ' + (index + 1);
+                    const option = document.createElement('option');
+                    option.value = rowId;
+                    option.textContent = ingredientName || 'Ingredient ' + (index + 1);
+                    dropdown.appendChild(option);
+                }
+            });
+        }
+
+        function clearAll() {
+            if (confirm('Clear all ingredients?')) {
+                document.getElementById('ingredientsBody').innerHTML = '';
+                ingredientCount = 0;
+                addIngredient();
+            }
+        }
+
+        function resetAll() {
+            if (confirm('Reset all fields to start fresh? This will clear all data.')) {
+                // Clear cocktail name
+                document.getElementById('cocktailName').value = '';
+                
+                // Clear all ingredient rows
+                document.getElementById('ingredientsBody').innerHTML = '';
+                ingredientCount = 0;
+                
+                // Reset target pour cost to default
+                document.getElementById('targetPourCost').value = 20;
+                document.getElementById('targetPourCostDisplay').textContent = '20.0%';
+                
+                // Clear menu price
+                document.getElementById('menuPrice').value = '';
+                
+                // Reset bottle yield inputs
+                document.getElementById('numBottles').value = 12;
+                document.getElementById('bottlesPerCase').value = 12;
+                
+                // Reset customer need dropdown to "Select a primary need..."
+                document.getElementById('customerNeed').value = '';
+                
+                // Reset all display values
+                document.getElementById('totalCost').textContent = '$0.00';
+                document.getElementById('suggestedPrice').textContent = '$0.00';
+                document.getElementById('actualPourCost').textContent = '--';
+                document.getElementById('grossProfit').textContent = '$0.00';
+                document.getElementById('orderSummary').textContent = '1 case (12 bottles)';
+                document.getElementById('cocktailsPerBottle').textContent = '--';
+                document.getElementById('totalRevenue').textContent = '--';
+                document.getElementById('ingredientCost').textContent = '--';
+                document.getElementById('totalGross').textContent = '--';
+                document.getElementById('breakEven').textContent = '--';
+                
+                // Clear ingredient dropdown
+                const dropdown = document.getElementById('selectIngredient');
+                dropdown.innerHTML = '<option value="">Choose ingredient...</option>';
+                
+                // Add one fresh ingredient row
+                addIngredient();
+                
+                // Show F.O.C.U.S. framework explanation
+                showFocusFramework();
+                
+                console.log('All fields reset');
+            }
+        }
+
+        function updateFromPourCost() {
+            const pourCost = parseFloat(document.getElementById('targetPourCost').value);
+            document.getElementById('targetPourCostDisplay').textContent = pourCost.toFixed(1) + '%';
+            updateCalculations();
+        }
+
+        function updateFromMenuPrice() {
+            updateCalculations();
+        }
+
+        function updateCalculations() {
+            try {
+                let totalCost = 0;
+                let hasData = false;
+                const rows = document.querySelectorAll('#ingredientsBody tr');
+                
+                rows.forEach(row => {
+                    const rowId = row.querySelector('input[id^="ingredient"]')?.id.replace('ingredient', '');
+                    if (rowId) {
+                        const itemPrice = parseFloat(document.getElementById('itemPrice' + rowId)?.value) || 0;
+                        const packageSize = parseFloat(document.getElementById('packageSize' + rowId)?.value) || 750;
+                        const recipeQty = parseFloat(document.getElementById('recipeQty' + rowId)?.value) || 0;
+                        const recipeUnit = document.getElementById('recipeUnit' + rowId)?.value || 'oz';
+                        
+                        if (itemPrice > 0 && recipeQty > 0) {
+                            hasData = true;
+                            let unitPrice = 0;
+                            if (recipeUnit === 'oz') {
+                                const packageOz = packageSize / 29.5735;
+                                unitPrice = itemPrice / packageOz;
+                            } else {
+                                unitPrice = itemPrice / packageSize;
+                            }
+                            
+                            const ingredientCost = unitPrice * recipeQty;
+                            
+                            const unitPriceEl = document.getElementById('unitPrice' + rowId);
+                            const costEl = document.getElementById('cost' + rowId);
+                            if (unitPriceEl) unitPriceEl.textContent = '$' + unitPrice.toFixed(3);
+                            if (costEl) costEl.textContent = '$' + ingredientCost.toFixed(2);
+                            
+                            totalCost += ingredientCost;
+                        } else {
+                            const unitPriceEl = document.getElementById('unitPrice' + rowId);
+                            const costEl = document.getElementById('cost' + rowId);
+                            if (unitPriceEl) unitPriceEl.textContent = '--';
+                            if (costEl) costEl.textContent = '--';
+                        }
+                    }
+                });
+
+                const totalCostEl = document.getElementById('totalCost');
+                if (totalCostEl) {
+                    totalCostEl.textContent = hasData ? '$' + totalCost.toFixed(2) : '$0.00';
+                }
+                
+                const pourCost = parseFloat(document.getElementById('targetPourCost')?.value) / 100 || 0.2;
+                const suggestedPrice = totalCost > 0 ? totalCost / pourCost : 0;
+                
+                const suggestedPriceEl = document.getElementById('suggestedPrice');
+                if (suggestedPriceEl) {
+                    suggestedPriceEl.textContent = suggestedPrice > 0 ? '$' + suggestedPrice.toFixed(2) : '$0.00';
+                }
+                
+                const menuPrice = parseFloat(document.getElementById('menuPrice')?.value) || 0;
+                
+                if (menuPrice > 0 && totalCost > 0) {
+                    const actualPourCost = (totalCost / menuPrice) * 100;
+                    const actualPourCostEl = document.getElementById('actualPourCost');
+                    if (actualPourCostEl) actualPourCostEl.textContent = actualPourCost.toFixed(1) + '%';
+                    
+                    const grossProfit = menuPrice - totalCost;
+                    const grossProfitEl = document.getElementById('grossProfit');
+                    if (grossProfitEl) grossProfitEl.textContent = '$' + grossProfit.toFixed(2);
+                } else {
+                    const actualPourCostEl = document.getElementById('actualPourCost');
+                    const grossProfitEl = document.getElementById('grossProfit');
+                    if (actualPourCostEl) actualPourCostEl.textContent = '--';
+                    if (grossProfitEl) grossProfitEl.textContent = '$0.00';
+                }
+                
+                updateIngredientDropdown();
+                updateBottleYield();
+            } catch (e) {
+                console.error('Error in updateCalculations:', e);
+            }
+        }
+
+        function updateBottleYield() {
+            const numBottles = parseInt(document.getElementById('numBottles')?.value) || 0;
+            const bottlesPerCase = parseInt(document.getElementById('bottlesPerCase')?.value) || 12;
+            const selectedIngredientId = document.getElementById('selectIngredient')?.value;
+            
+            // Update order summary
+            if (numBottles > 0) {
+                const fullCases = Math.floor(numBottles / bottlesPerCase);
+                const remainingBottles = numBottles % bottlesPerCase;
+                
+                let summaryText = '';
+                if (fullCases > 0 && remainingBottles === 0) {
+                    summaryText = fullCases + ' case' + (fullCases > 1 ? 's' : '') + ' (' + numBottles + ' bottles)';
+                } else if (fullCases > 0 && remainingBottles > 0) {
+                    summaryText = fullCases + ' case' + (fullCases > 1 ? 's' : '') + ' + ' + remainingBottles + ' bottle' + (remainingBottles > 1 ? 's' : '') + ' (' + numBottles + ' total)';
+                } else {
+                    summaryText = numBottles + ' bottle' + (numBottles > 1 ? 's' : '') + ' (less than 1 case)';
+                }
+                
+                const orderSummaryEl = document.getElementById('orderSummary');
+                if (orderSummaryEl) orderSummaryEl.textContent = summaryText;
+            }
+            
+            const cocktailsPerBottleEl = document.getElementById('cocktailsPerBottle');
+            const totalRevenueEl = document.getElementById('totalRevenue');
+            const ingredientCostEl = document.getElementById('ingredientCost');
+            const totalGrossEl = document.getElementById('totalGross');
+            const breakEvenEl = document.getElementById('breakEven');
+            
+            // If no ingredient selected or no bottles, show --
+            if (!selectedIngredientId || numBottles === 0) {
+                if (cocktailsPerBottleEl) cocktailsPerBottleEl.textContent = '--';
+                if (totalRevenueEl) totalRevenueEl.textContent = '--';
+                if (ingredientCostEl) ingredientCostEl.textContent = '--';
+                if (totalGrossEl) totalGrossEl.textContent = '--';
+                if (breakEvenEl) breakEvenEl.textContent = '--';
+                return;
+            }
+            
+            // Get ingredient data
+            const packageSize = parseFloat(document.getElementById('packageSize' + selectedIngredientId)?.value) || 750;
+            const recipeQty = parseFloat(document.getElementById('recipeQty' + selectedIngredientId)?.value) || 0;
+            const recipeUnit = document.getElementById('recipeUnit' + selectedIngredientId)?.value || 'oz';
+            const itemPrice = parseFloat(document.getElementById('itemPrice' + selectedIngredientId)?.value) || 0;
+            const menuPrice = parseFloat(document.getElementById('menuPrice')?.value) || 0;
+            const totalCostPerCocktail = parseFloat(document.getElementById('totalCost')?.textContent.replace('$', '')) || 0;
+            
+            if (recipeQty === 0 || itemPrice === 0) {
+                if (cocktailsPerBottleEl) cocktailsPerBottleEl.textContent = '--';
+                if (totalRevenueEl) totalRevenueEl.textContent = '--';
+                if (ingredientCostEl) ingredientCostEl.textContent = '--';
+                if (totalGrossEl) totalGrossEl.textContent = '--';
+                if (breakEvenEl) breakEvenEl.textContent = '--';
+                return;
+            }
+            
+            // Calculate cocktails per bottle
+            let cocktailsPerBottle = 0;
+            if (recipeUnit === 'oz') {
+                const bottleOz = packageSize / 29.5735;
+                cocktailsPerBottle = Math.floor(bottleOz / recipeQty);
+            } else {
+                cocktailsPerBottle = Math.floor(packageSize / recipeQty);
+            }
+            
+            // Calculate totals
+            const totalCocktails = cocktailsPerBottle * numBottles;
+            const totalRevenue = menuPrice > 0 ? totalCocktails * menuPrice : 0;
+            const totalIngredientCost = itemPrice * numBottles;
+            const totalGross = totalRevenue - (totalCostPerCocktail * totalCocktails);
+            const breakEven = menuPrice > totalCostPerCocktail ? Math.ceil(totalIngredientCost / (menuPrice - totalCostPerCocktail)) : 0;
+            
+            // Update display
+            if (cocktailsPerBottleEl) cocktailsPerBottleEl.textContent = cocktailsPerBottle;
+            if (totalRevenueEl) totalRevenueEl.textContent = menuPrice > 0 ? '$' + totalRevenue.toFixed(2) : '--';
+            if (ingredientCostEl) ingredientCostEl.textContent = '$' + totalIngredientCost.toFixed(2);
+            if (totalGrossEl) totalGrossEl.textContent = menuPrice > 0 ? '$' + totalGross.toFixed(2) : '--';
+            if (breakEvenEl) breakEvenEl.textContent = breakEven > 0 ? breakEven : '--';
+        }
+
+        function saveCalculator() {
+            window.print();
+        }
+
+        function saveCoachingPanel() {
+            window.print();
+        }
+
+        // Call generateFocusPitch whenever calculations update
+        function triggerFocusUpdate() {
+            try {
+                generateFocusPitch();
+            } catch(e) {
+                console.log('F.O.C.U.S. pitch not ready yet');
+            }
+        }
+
+        function generateFocusPitch() {
+            const needEl = document.getElementById('customerNeed');
+            const cocktailNameEl = document.getElementById('cocktailName');
+            
+            if (!needEl || !cocktailNameEl) return;
+            
+            const need = needEl.value;
+            
+            // If no need selected, show the F.O.C.U.S. framework explanation
+            if (!need) {
+                showFocusFramework();
+                return;
+            }
+            
+            const cocktailName = cocktailNameEl.value || 'this cocktail';
+            const totalCost = document.getElementById('totalCost')?.textContent || '$0.00';
+            const pourCost = document.getElementById('targetPourCostDisplay')?.textContent || '20%';
+            const menuPrice = document.getElementById('menuPrice')?.value || '0';
+            const suggestedPrice = document.getElementById('suggestedPrice')?.textContent.replace('$', '') || '0';
+            const grossProfit = document.getElementById('grossProfit')?.textContent || '$0.00';
+            const numBottles = document.getElementById('numBottles')?.value || '12';
+            const bottlesPerCase = parseInt(document.getElementById('bottlesPerCase')?.value) || 12;
+            
+            const hasCostData = totalCost !== '$0.00' && totalCost !== '--';
+            const menuPriceValue = parseFloat(menuPrice) || parseFloat(suggestedPrice);
+            const cocktailsPerBottle = document.getElementById('cocktailsPerBottle')?.textContent || '--';
+            const totalRevenue = document.getElementById('totalRevenue')?.textContent || '--';
+            
+            // Build order text
+            const numBottlesInt = parseInt(numBottles);
+            const fullCases = Math.floor(numBottlesInt / bottlesPerCase);
+            const remainingBottles = numBottlesInt % bottlesPerCase;
+            
+            let orderText = '';
+            if (fullCases > 0 && remainingBottles === 0) {
+                orderText = fullCases + ' case' + (fullCases > 1 ? 's' : '') + ' (' + numBottles + ' bottles)';
+            } else if (fullCases > 0 && remainingBottles > 0) {
+                orderText = fullCases + ' case' + (fullCases > 1 ? 's' : '') + ' plus ' + remainingBottles + ' bottle' + (remainingBottles > 1 ? 's' : '') + ' (' + numBottles + ' total bottles)';
+            } else {
+                orderText = numBottles + ' bottle' + (numBottles > 1 ? 's' : '');
+            }
+
+            // Update each F.O.C.U.S. section
+            updateFrameSection(need, cocktailName, totalCost, pourCost, menuPriceValue, grossProfit, hasCostData);
+            updateInsightsSection(cocktailName);
+            updateConnectSection(need, cocktailName, totalCost, pourCost, menuPriceValue, grossProfit, cocktailsPerBottle, totalRevenue);
+            updateConcernsSection(need);
+            updateCloseSection(need, cocktailName, orderText, pourCost, grossProfit, cocktailsPerBottle, menuPriceValue);
+        }
+
+        function showFocusFramework() {
+            // Show the F.O.C.U.S. framework explanation when no primary need is selected
+            const frameEl = document.getElementById('frameContent');
+            const insightsEl = document.getElementById('insightsContent');
+            const connectEl = document.getElementById('connectContent');
+            const concernsEl = document.getElementById('concernsContent');
+            const closeEl = document.getElementById('closeContent');
+            
+            if (frameEl) {
+                frameEl.innerHTML = '<strong>F - Frame the Conversation</strong><br><br>' +
+                    'Set the context using the customer\'s own priorities and language. Open with their stated goals and challenges to establish relevance immediately. ' +
+                    'This positions you as someone who listened and understood, not just someone with products to sell.<br><br>' +
+                    '<em>Example: "During our last conversation, we spoke about how you\'d like to build your cocktail program with signature drinks..."</em>';
+            }
+            
+            if (insightsEl) {
+                insightsEl.innerHTML = '<strong>O - Offer Insights & Features</strong><br><br>' +
+                    'Share market intelligence and product capabilities that matter. Present relevant industry trends, competitive insights, and product features that specifically address their situation. ' +
+                    'Lead with insights that add value beyond product knowledge.<br><br>' +
+                    '<em>Example: "Looking at the data, premium agave spirits are up 18% in this market..."</em>';
+            }
+            
+            if (connectEl) {
+                connectEl.innerHTML = '<strong>C - Connect to Their Needs</strong><br><br>' +
+                    'Link every recommendation directly to discovered priorities. Explicitly tie each solution back to their stated challenges using phrases like "Since you mentioned..." or "This addresses your concern about..." ' +
+                    'Make the connection obvious and compelling.<br><br>' +
+                    '<em>Example: "Building a signature cocktail program means creating drinks customers can\'t get elsewhere..."</em>';
+            }
+            
+            if (concernsEl) {
+                concernsEl.innerHTML = '<strong>U - Understand Concerns</strong><br><br>' +
+                    'Invite dialogue and actively address hesitations. Pause to check understanding and invite questions. When concerns arise, welcome them as opportunities to refine the solution. ' +
+                    'This creates collaborative problem-solving, not defensive selling.<br><br>' +
+                    '<em>Example: "You might be thinking: \'Will customers pay that price?\' Here\'s the thing..."</em>';
+            }
+            
+            if (closeEl) {
+                closeEl.innerHTML = '<strong>S - Secure the Sale</strong><br><br>' +
+                    'Confidently ask for commitment based on demonstrated value. Summarize the agreed-upon value and ask for specific next steps. ' +
+                    'The close becomes natural when every previous step has built clear value alignment.<br><br>' +
+                    '<em>Example: "Let\'s bring in 1 case (12 bottles) on your next order to build out your signature cocktail program..."</em>';
+            }
+        }
+
+        function updateFrameSection(need, name, cost, pour, price, profit, hasData) {
+            const el = document.getElementById('frameContent');
+            if (!el) return;
+            
+            // F - FRAME THE CONVERSATION
+            // Set context using customer's own priorities and language. Open with their stated goals and challenges
+            // to establish relevance immediately. Position as someone who listened and understood, not just someone with products to sell.
+            
+            let text = '';
+            const priceStr = '$' + parseFloat(price).toFixed(2);
+            
+            switch(need) {
+                case 'signature':
+                    text = 'During our last conversation, we spoke about how you\'d like to build your cocktail program with signature drinks. With ' + name + ', you can create a unique bar identity that differentiates you from competitors.' + (hasData ? ' At ' + cost + ' cost per cocktail with a ' + pour + ' target pour cost, we can position this at ' + priceStr + ' to deliver both quality and profitability.' : ' Let me show you the numbers on this proposal.');
+                    break;
+                case 'margins':
+                    text = 'When we last talked, improving profit margins was top of mind for you. The cocktail I\'m proposing - ' + name + ' - ' + (hasData ? 'runs ' + cost + ' per pour. At your ' + pour + ' target, we can price this at ' + priceStr + ', giving you ' + profit + ' in gross profit per drink. This kind of margin improvement across your menu can significantly impact your bottom line.' : 'can help drive those margin improvements. Let me walk you through the cost structure.');
+                    break;
+                case 'revenue':
+                    text = 'You mentioned wanting to maximize revenue per bottle. With ' + name + ', we can significantly increase your per-bottle revenue compared to well cocktails that might only generate half that amount.' + (hasData ? ' At ' + priceStr + ' per cocktail, you\'re looking at strong revenue potential.' : '');
+                    break;
+                case 'elevate':
+                    text = 'We discussed elevating your premium offerings to attract a higher-end clientele. ' + name + ' positions perfectly in this space' + (hasData ? ' - with ' + cost + ' cost per cocktail and ' + pour + ' pour cost, we can confidently price at ' + priceStr + '. This premium positioning signals quality while maintaining strong margins.' : '. Let me show you how the pricing works out.');
+                    break;
+                case 'consistency':
+                    text = 'You shared concerns about speed and consistency behind the bar. ' + name + ' is designed with that in mind' + (hasData ? ' - at ' + cost + ' per pour with a precise ' + pour + ' target, your team can execute this efficiently during rush periods.' : '. The recipe is straightforward and easy to train.');
+                    break;
+                case 'cost':
+                    text = 'Better cost control was your priority in our last meeting. Let\'s look at ' + name + (hasData ? ' - we\'re running ' + cost + ' cost per cocktail, hitting your ' + pour + ' target pour cost perfectly. At ' + priceStr + ', you know exactly where every dollar is going.' : '. We can spec this out to hit your target pour cost precisely.');
+                    break;
+                case 'waste':
+                    text = 'We talked about reducing beverage waste and over-pouring. With ' + name + (hasData ? ' spec\'d at ' + cost + ' per cocktail and ' + pour + ' target pour, your team has clear measurements. This eliminates guesswork and protects your margin.' : ' built with precise measurements, we eliminate waste and protect your margins.');
+                    break;
+                case 'check':
+                    text = 'Increasing check average was your goal. ' + name + ' is a perfect upsell opportunity' + (hasData ? ' - at ' + priceStr + ', it\'s positioned above your well drinks while delivering ' + profit + ' per cocktail.' : ' that can add dollars to every guest check.');
+                    break;
+                case 'differentiate':
+                    text = 'You want to differentiate from competitors in the area. ' + name + ' gives you that edge - it\'s unique' + (hasData ? ', and at ' + cost + ' per pour with ' + pour + ' target, we can price at ' + priceStr + '. Your competitors aren\'t offering this.' : ' and something your competitors won\'t have.');
+                    break;
+                case 'training':
+                    text = 'Simplifying staff training was important to you. ' + name + ' is straightforward to execute' + (hasData ? ' - ' + cost + ' cost per cocktail with clear specs hitting ' + pour + ' pour cost. New staff can master this quickly.' : ' with simple specs your team can learn quickly.');
+                    break;
+                default:
+                    text = 'During our last conversation, we discussed your cocktail program needs. ' + (hasData ? 'With ' + name + ', running ' + cost + ' per cocktail at a ' + pour + ' target pour cost, we can price this at ' + priceStr + ' and deliver ' + profit + ' per drink.' : 'Let me show you the proposal for ' + name + '.');
+            }
+            el.textContent = text;
+        }
+
+        function updateInsightsSection(name) {
+            const el = document.getElementById('insightsContent');
+            if (!el) return;
+            
+            // O - OFFER INSIGHTS & FEATURES
+            // Share market intelligence and product capabilities that matter. Present relevant industry trends,
+            // competitive insights, and product features that specifically address their situation.
+            // Lead with insights that add value beyond product knowledge.
+            
+            const guidance = 'GUIDANCE FOR SALES CONSULTANT:<br><br>' +
+                'Share market intelligence and product capabilities that matter. Present relevant industry trends, competitive insights, and product features that specifically address their situation. Lead with insights that add value beyond product knowledge.<br><br>' +
+                '<strong>• COCKTAIL CATEGORY TRENDS:</strong> Research current consumer preferences, trending flavors, seasonal opportunities in the cocktail category (e.g., "Spicy margaritas up 25% year-over-year" or "Premium tequila cocktails seeing strong growth in Q4")<br><br>' +
+                '<strong>• SPIRIT CATEGORY DATA:</strong> Share category insights for the base spirit used (e.g., "Premium vodka sales in your market grew 15% last quarter" or "Craft gin resonating with millennial consumers")<br><br>' +
+                '<strong>• CUSTOMER SALES TRENDS:</strong> Reference their specific sales data (e.g., "Your tequila-based cocktails perform well on weekends" or "Your premium cocktail sales increased 20% when you added signature drinks last year")<br><br>' +
+                '<strong>• MARKET POSITION:</strong> Compare their performance to market trends (e.g., "Similar accounts seeing success with $12-15 craft cocktails" or "Your current cocktail mix index is below category average - this is an opportunity")<br><br>' +
+                '<strong>EXAMPLE:</strong> "Looking at the data, premium agave spirits are up 18% in this market, and I noticed your margarita sales already account for 30% of your cocktail mix. With consumer demand trending toward authentic, craft cocktails, ' + name + ' positions you perfectly to capture more of that growth."';
+            
+            el.innerHTML = guidance;
+        }
+
+        function updateConnectSection(need, name, cost, pour, price, profit, perBottle, revenue) {
+            const el = document.getElementById('connectContent');
+            if (!el) return;
+            
+            // C - CONNECT TO THEIR NEEDS
+            // Link every recommendation directly to discovered priorities. Explicitly tie each solution back to their stated
+            // challenges using phrases like "Since you mentioned..." or "This addresses your concern about..."
+            // Make the connection obvious and compelling.
+            
+            const priceStr = '$' + parseFloat(price).toFixed(2);
+            let text = '';
+            
+            switch(need) {
+                case 'signature':
+                    text = 'Building a signature cocktail program means creating drinks customers can\'t get elsewhere. ' + name + ' at ' + priceStr + ' becomes a destination drink - the kind guests come in specifically to order. With ' + profit + ', you\'re making strong margin on something unique to your bar, not just competing on price with the same cocktails everyone else has.';
+                    break;
+                case 'margins':
+                    text = 'Better margins mean more profit on every sale without raising prices across the board. ' + name + ' at ' + pour + ' pour cost gives you ' + profit + ' per drink - multiply that by 50 or 100 cocktails a week, and you\'re seeing real money added to your bottom line. This margin improvement strategy scales across your whole menu.';
+                    break;
+                case 'revenue':
+                    text = 'Maximizing revenue per bottle means getting every profitable cocktail out of that bottle. ' + (perBottle !== '--' ? perBottle + ' cocktails at ' + priceStr + ' each = ' + revenue + ' in revenue potential. ' : '') + 'Compare that to free pouring or well drinks, and you\'re leaving hundreds of dollars on the table with every case.';
+                    break;
+                case 'elevate':
+                    text = 'Elevating premium offerings attracts higher-spending customers and positions your bar above the competition. ' + name + ' at ' + priceStr + ' says "quality" to your guests - it\'s priced like a craft cocktail, delivers on that promise, and makes ' + profit + ' per drink. Premium customers will pay for premium experiences.';
+                    break;
+                case 'consistency':
+                    text = 'Speed and consistency behind the bar means your team can execute during rush periods without sacrificing quality or margin. ' + name + ' has precise specs - ' + cost + ' per pour, ' + pour + ' target - so every bartender makes it the same way. No guessing, no variance, no lost profit from over-pouring.';
+                    break;
+                case 'cost':
+                    text = 'Better cost control means knowing exactly what each cocktail costs and hitting your targets consistently. ' + name + ' runs ' + cost + ' with ' + pour + ' pour cost - you can track this, measure it, and hold your team accountable. When you price at ' + priceStr + ', you know you\'re making ' + profit + ' every single time.';
+                    break;
+                case 'waste':
+                    text = 'Reducing beverage waste saves hundreds or thousands per month. ' + name + ' with exact measurements means no over-pouring, no guesswork, no "heavy hand" costing you money. At ' + pour + ' pour cost yielding ' + perBottle + ' cocktails per bottle, you get every profitable drink out of that bottle - nothing wasted, nothing lost.';
+                    break;
+                case 'check':
+                    text = 'Increasing check average means trading customers up from well drinks to premium cocktails. ' + name + ' at ' + priceStr + ' is an easy upsell - "Would you like to try our signature cocktail?" - and suddenly you\'ve added $5-7 to the check while making ' + profit + '. Train your team to suggest it, and watch average checks climb.';
+                    break;
+                case 'differentiate':
+                    text = 'Standing out from competitors means offering something they don\'t have. ' + name + ' is unique to your bar - customers can\'t get this exact drink at the place down the street. At ' + priceStr + ' with ' + profit + ' margin, you\'re differentiating profitably. This becomes a reason to choose your bar over the competition.';
+                    break;
+                case 'training':
+                    text = 'Simplifying training means new hires can execute quality cocktails faster. ' + name + ' has clear, simple specs - ' + cost + ' cost, ' + pour + ' pour cost, straightforward build. Your training time drops, consistency improves, and you\'re still making ' + profit + ' per drink. Less complexity equals better execution.';
+                    break;
+                default:
+                    text = name + ' at ' + priceStr + ' delivers ' + profit + ' per cocktail while maintaining your ' + pour + ' target pour cost. This gives you the profitability and quality you\'re looking for.';
+            }
+            el.textContent = text;
+        }
+
+        function updateConcernsSection(need) {
+            const el = document.getElementById('concernsContent');
+            if (!el) return;
+            
+            // U - UNDERSTAND CONCERNS
+            // Invite dialogue and actively address hesitations. Pause to check understanding and invite questions.
+            // When concerns arise, welcome them as opportunities to refine the solution.
+            // This creates collaborative problem-solving, not defensive selling.
+            
+            let text = '';
+            switch(need) {
+                case 'signature':
+                    text = 'You might be thinking: "Will customers pay that price?" or "What if it doesn\'t sell?" Here\'s the thing - signature cocktails have higher perceived value. Guests expect to pay more for something unique. We can start with a feature to test guest response, and if it performs, we lock it into the permanent menu. Low risk, high reward.';
+                    break;
+                case 'margins':
+                    text = 'The concern might be: "Will customers notice if I change cocktail costs?" or "What if I lose volume?" Actually, when you maintain quality and value, customers don\'t push back on optimized margins. We\'re not cutting quality - we\'re engineering profitability. Plus, losing 10% volume but gaining 30% margin is still a win.';
+                    break;
+                case 'revenue':
+                    text = 'You\'re probably thinking: "That sounds good, but will we actually sell that many?" Fair question. The key is promotion and staff engagement. If your bartenders recommend it and you feature it prominently, you\'ll hit those numbers. We can support you with POS materials and training to drive trial.';
+                    break;
+                case 'elevate':
+                    text = 'The worry might be: "Will our regular customers think we\'re too expensive now?" Premium doesn\'t mean abandoning your base - it means giving them an option to trade up. You keep your well cocktails for price-sensitive guests and add premium options for those willing to spend. You\'re expanding choice, not replacing it.';
+                    break;
+                case 'consistency':
+                    text = 'You might be concerned: "My bartenders won\'t follow the specs" or "They\'ll resist measuring." That\'s a training and accountability issue, not a spec issue. When you show them the profit impact of consistency - the difference between making 14 drinks per bottle versus 16 - they get it. It\'s about protecting the business and their tips.';
+                    break;
+                case 'cost':
+                    text = 'The concern is probably: "This sounds like more work to track" or "I don\'t have time to monitor this closely." Actually, good cost control makes your life easier, not harder. Once you set the specs, it runs itself. Your POS tracks sales, inventory tracks usage, and you simply verify the math monthly. Systems create freedom.';
+                    break;
+                case 'waste':
+                    text = 'You\'re thinking: "My staff won\'t like using jiggers" or "It\'ll slow down service." I get it - there\'s pushback on measuring. But here\'s the reality: the bar down the street that measures is more profitable than you. It adds 5 seconds per cocktail and saves hundreds per week. That\'s a trade worth making, and once it\'s habit, nobody notices.';
+                    break;
+                case 'check':
+                    text = 'The worry might be: "What if guests don\'t want to spend more?" or "We\'ll lose customers over price." Here\'s the truth - you\'re not forcing anyone to spend more. You\'re offering the option. "Would you like our house cocktail or our premium signature?" Some say yes, some say no, but the ones who say yes just increased your revenue. No downside.';
+                    break;
+                case 'differentiate':
+                    text = 'You might think: "How do I know customers will care about unique cocktails?" or "What if they just want the basics?" Valid concerns. But consider: why do people choose one bar over another when prices are similar? Experience and uniqueness. Give them something they can\'t get elsewhere, and you become the destination. Basics keep you in the game; uniqueness wins the game.';
+                    break;
+                case 'training':
+                    text = 'The concern is: "Simple cocktails won\'t seem premium" or "Customers expect complex drinks." Actually, simplicity is a feature, not a bug. The best cocktails are often the simplest - margarita, old fashioned, gin and tonic. Your guests care about taste and consistency, not how many ingredients you use. Simple done well beats complex done poorly every time.';
+                    break;
+                default:
+                    text = 'You might be concerned about price sensitivity, staff training, or inventory management. We can address each of these with a structured rollout plan - starting with a feature period, training your team on the specs and selling points, and monitoring performance weekly to ensure we\'re hitting targets.';
+            }
+            el.textContent = text;
+        }
+
+        function updateCloseSection(need, name, order, pour, profit, perBottle, price) {
+            const el = document.getElementById('closeContent');
+            if (!el) return;
+            
+            // S - SECURE THE SALE
+            // Confidently ask for commitment based on demonstrated value. Summarize the agreed-upon value and
+            // ask for specific next steps. The close becomes natural when every previous step has built clear value alignment.
+            
+            const priceStr = '$' + parseFloat(price).toFixed(2);
+            let text = '';
+            
+            switch(need) {
+                case 'signature':
+                    text = 'Let\'s bring in ' + order + ' on your next order to build out your signature cocktail program. We\'ll feature ' + name + ' for 30 days to build awareness and drive trial. When it performs to these numbers - ' + perBottle + ' cocktails per bottle, ' + profit + ' per drink - we lock it into your permanent menu and set up ongoing orders. This is how you establish the signature program you want, backed by profitability data.';
+                    break;
+                case 'margins':
+                    text = 'Let\'s start with ' + order + ' on your next order to prove the margin improvement. We run ' + name + ' as a feature for two weeks and track the results: cost per pour, actual pour cost percentage, and gross profit per cocktail. When we hit ' + pour + ' and ' + profit + ' as projected, we add it to the permanent menu and you\'ve got a margin-boosting cocktail you can count on.';
+                    break;
+                case 'revenue':
+                    text = 'Let\'s bring in ' + order + ' to maximize that revenue per bottle. We feature ' + name + ' for 30 days, track exactly how many cocktails you\'re getting per bottle, and measure total revenue against projections. When the math checks out - and it will - we move this to permanent menu and you\'re generating maximum revenue on every case we bring in.';
+                    break;
+                case 'elevate':
+                    text = 'Let\'s bring in ' + order + ' on your next order to elevate your premium offerings. We feature ' + name + ' at ' + priceStr + ' for the next month, position it as your signature premium cocktail, and watch the guest response. When you\'re moving bottles and making ' + profit + ' per cocktail, we make this permanent and continue building out your premium tier.';
+                    break;
+                case 'consistency':
+                    text = 'Let\'s start with ' + order + '. We train your team on the exact specs for ' + name + ', set the standard for ' + pour + ' pour cost, and monitor execution for consistency. After two weeks, we measure: are they hitting the specs? Are you getting ' + perBottle + ' cocktails per bottle? When consistency is dialed in, we add to permanent menu and replicate this process across other cocktails.';
+                    break;
+                case 'cost':
+                    text = 'Let\'s bring in ' + order + ' on your next order to establish better cost control. We feature ' + name + ', track every metric - cost per pour, ' + pour + ' pour cost percentage, ' + profit + ' profit per cocktail - and verify the numbers weekly. When you see the control and profitability in action over 30 days, we make this permanent and you have a cost-controlled cocktail you can scale.';
+                    break;
+                case 'waste':
+                    text = 'Let\'s bring in ' + order + ' to reduce beverage waste. We implement ' + name + ' with precise measurements - ' + pour + ' pour cost yielding ' + perBottle + ' cocktails per bottle. We track waste reduction over 30 days and measure actual yield against projection. When you see the savings - hundreds of dollars that were previously lost to over-pouring - we lock this in permanently and extend the discipline to other cocktails.';
+                    break;
+                case 'check':
+                    text = 'Let\'s bring in ' + order + ' on your next order to increase check average. We feature ' + name + ' as an upsell, train your team on suggestive selling, and track check average weekly. When you see checks climbing by $3-5 per guest and you\'re making ' + profit + ' per upsell, we make this permanent and continue building your upsell program.';
+                    break;
+                case 'differentiate':
+                    text = 'Let\'s bring in ' + order + ' to differentiate your bar. We feature ' + name + ' as your signature cocktail - something competitors don\'t have - and promote it heavily: table tents, social media, staff recommendations. We run it for 30 days and measure guest response. When customers are asking for it by name and you\'re making ' + profit + ' per drink, we lock it into permanent menu and you\'ve got your differentiator.';
+                    break;
+                case 'training':
+                    text = 'Let\'s start with ' + order + ' on your next order to simplify staff training. We make ' + name + ' your training standard - new hires learn this cocktail first because it\'s straightforward, consistent, and profitable at ' + profit + ' per drink. We feature it for 30 days while training new staff, measure execution consistency, and when it\'s running smoothly, we add to permanent menu and you\'ve got a reliable cocktail for both training and profit.';
+                    break;
+                default:
+                    text = 'Let\'s bring in ' + order + ' on your next order to run ' + name + ' as a feature for the next 30 days. We track the performance against these projections, and when the numbers hold - ' + pour + ' pour cost, ' + profit + ' profit per cocktail - we move this to your permanent menu and set up ongoing orders.';
+            }
+            el.textContent = text;
+        }
+    </script>
+</body>
+</html>
